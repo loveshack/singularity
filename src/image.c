@@ -77,10 +77,18 @@ int image_create(char *image, int size) {
         fseek(image_fp, 1024 * 1024, SEEK_CUR);
     }
     fprintf(image_fp, "0");
-    fclose(image_fp);
 
     message(VERBOSE2, "Making image executable\n");
-    chmod(image, 0755);
+    if (fchmod(fileno(image_fp), 0755) < 0) {
+        fprintf(stderr, "ERROR: chmod failed for image %s: %s\n",
+                image, strerror(errno));
+        return -1;
+    }
+    if (fclose(image_fp) < 0) {
+        fprintf(stderr, "ERROR: closing image failed %s: %s\n",
+                image, strerror(errno));
+        return -1;
+    }
 
     message(DEBUG, "Returning image_create(%s, %d) = 0\n", image, size);
 
