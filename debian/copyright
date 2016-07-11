@@ -15,7 +15,7 @@ License: BSD-3-Clause-LBNL
 
 Files: debian/*
 Copyright: 2016 Dave Love <fx@gnu.org>
-License: BSD-2-clause
+License: BSD-2-Clause
 
 License: BSD-3-Clause-LBNL
  Redistribution and use in source and binary forms, with or without
@@ -57,15 +57,15 @@ License: BSD-3-Clause-LBNL
  If you have questions about your rights to use or distribute this software,
  please contact Berkeley Lab's Innovation & Partnerships Office at
  IPO@lbl.gov.
- . 
+ .
  NOTICE.  This Software was developed under funding from the U.S. Department of
  Energy and the U.S. Government consequently retains certain rights. As such,
  the U.S. Government has been granted for itself and others acting on its
  behalf a paid-up, nonexclusive, irrevocable, worldwide license in the Software
  to reproduce, distribute copies to the public, prepare derivative works, and
- perform publicly and display publicly, and to permit other to do so. 
+ perform publicly and display publicly, and to permit other to do so.
 
-License: BSD-2-clause
+License: BSD-2-Clause
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are
  met:
