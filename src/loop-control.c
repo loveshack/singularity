@@ -111,7 +111,7 @@ int associate_loop(FILE *image_fp, FILE *loop_fp, int autoclear) {
     }
     lo64.lo_offset = image_offset(image_fp);
 
-    message(DEBUG, "Setting image offset to: %d\n", lo64.lo_offset);
+    message(DEBUG, "Setting image offset to: %zd\n", (size_t) lo64.lo_offset);
 
     message(VERBOSE2, "Associating image to loop device\n");
     if ( ioctl(loop_fd, LOOP_SET_FD, image_fd) < 0 ) {
