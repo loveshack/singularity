@@ -150,7 +150,7 @@ int is_owner(char *path, uid_t uid) {
         return(-1);
     }
 
-    if ( uid == (int)filestat.st_uid ) {
+    if ( uid == filestat.st_uid ) {
         return(0);
     }
 
