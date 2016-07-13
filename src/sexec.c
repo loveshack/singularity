@@ -345,7 +345,7 @@ int main(int argc, char ** argv) {
     if ( flock(loop_dev_lock_fd, LOCK_EX | LOCK_NB) == 0 ) {
         loop_dev = obtain_loop_dev();
 
-        if ( ( loop_fp = fopen(loop_dev, "r+") ) < 0 ) {
+        if ( !( loop_fp = fopen(loop_dev, "r+") ) ) {
             message(ERROR, "Failed to open loop device %s: %s\n", loop_dev, strerror(errno));
             ABORT(255);
         }
@@ -369,7 +369,7 @@ int main(int argc, char ** argv) {
             ABORT(255);
         }
 
-        if ( ( loop_fp = fopen(loop_dev, "r") ) < 0 ) {
+        if ( !( loop_fp = fopen(loop_dev, "r") ) ) {
             message(ERROR, "Failed to open loop device %s: %s\n", loop_dev, strerror(errno));
             ABORT(255);
         }

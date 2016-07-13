@@ -77,7 +77,7 @@ int main(int argc, char ** argv) {
         }
 
         message(VERBOSE, "Checking if container can be opened read/write\n");
-        if ( ( containerimage_fp = fopen(containerimage, "r+") ) < 0 ) {
+        if ( !( containerimage_fp = fopen(containerimage, "r+") ) ) {
             message(ERROR, "Could not open image %s: %s\n", containerimage, strerror(errno));
             ABORT(255);
         }
@@ -86,7 +86,7 @@ int main(int argc, char ** argv) {
         loop_dev = obtain_loop_dev();
 
         message(VERBOSE, "Opening loop device: %s\n", loop_dev);
-        if ( ( loop_fp = fopen(loop_dev, "r+") ) < 0 ) {
+        if ( !( loop_fp = fopen(loop_dev, "r+") ) ) {
             message(ERROR, "Failed to open loop device %s: %s\n", loop_dev, strerror(errno));
             ABORT(255);
         }
@@ -113,7 +113,7 @@ int main(int argc, char ** argv) {
         }
 
         message(VERBOSE, "Opening loop device\n");
-        if ( ( loop_fp = fopen(loop_dev, "r+") ) < 0 ) {
+        if ( !( loop_fp = fopen(loop_dev, "r+") ) ) {
             message(ERROR, "Failed to open loop device %s: %s\n", loop_dev, strerror(errno));
             ABORT(255);
         }

@@ -127,12 +127,12 @@ int main(int argc, char ** argv) {
 
     loop_dev = obtain_loop_dev();
 
-    if ( ( containerimage_fp = fopen(containerimage, "r+") ) < 0 ) {
+    if ( !( containerimage_fp = fopen(containerimage, "r+") ) ) {
         fprintf(stderr, "ERROR: Could not open image %s: %s\n", containerimage, strerror(errno));
         return(255);
     }
 
-    if ( ( loop_fp = fopen(loop_dev, "r+") ) < 0 ) {
+    if ( !( loop_fp = fopen(loop_dev, "r+") ) ) {
         fprintf(stderr, "ERROR: Failed to open loop device %s: %s\n", loop_dev, strerror(errno));
         return(-1);
     }
