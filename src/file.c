@@ -5,9 +5,9 @@
  * through Lawrence Berkeley National Laboratory (subject to receipt of any
  * required approvals from the U.S. Dept. of Energy).  All rights reserved.
  * 
- * If you have questions about your rights to use or distribute this software,
- * please contact Berkeley Lab's Innovation & Partnerships Office at
- * IPO@lbl.gov.
+ * This software is licensed under a customized 3-clause BSD license.  Please
+ * consult LICENSE file distributed with the sources of this project regarding
+ * your rights to use or distribute this software.
  * 
  * NOTICE.  This Software was developed under funding from the U.S. Department of
  * Energy and the U.S. Government consequently retains certain rights. As such,
@@ -53,7 +53,7 @@ char *file_id(char *path) {
     }
 
     ret = (char *) malloc(128);
-    snprintf(ret, 128, "%d.%d.%lu", (int)uid, (int)filestat.st_dev, (long unsigned)filestat.st_ino);
+    snprintf(ret, 128, "%d.%d.%lu", (int)uid, (int)filestat.st_dev, (long unsigned)filestat.st_ino); // Flawfinder: ignore
 
     message(VERBOSE2, "Generated file_id: %s\n", ret);
 
@@ -179,7 +179,7 @@ int s_mkpath(char *dir, mode_t mode) {
         return(-1);
     }
 
-    if (strlen(dir) == 1 && dir[0] == '/') {
+    if (strlength(dir, 2) == 1 && dir[0] == '/') {
         return(0);
     }
 
@@ -214,9 +214,10 @@ int s_rmdir(char *dir) {
 }
 
 int copy_file(char * source, char * dest) {
+    struct stat filestat;
     int c;
-    FILE * fd_s;
-    FILE * fd_d;
+    FILE * fp_s;
+    FILE * fp_d;
 
     message(DEBUG, "Called copy_file(%s, %s)\n", source, dest);
 
@@ -225,25 +226,41 @@ int copy_file(char * source, char * dest) {
         return(-1);
     }
 
-    fd_s = fopen(source, "r");
-    if ( fd_s == NULL ) {
+    message(DEBUG, "Opening source file: %s\n", source);
+    if ( ( fp_s = fopen(source, "r") ) == NULL ) { // Flawfinder: ignore
         message(ERROR, "Could not read %s: %s\n", source, strerror(errno));
         return(-1);
     }
 
-    fd_d = fopen(dest, "w");
-    if ( fd_s == NULL ) {
-        fclose(fd_s);
+    message(DEBUG, "Opening destination file: %s\n", dest);
+    if ( ( fp_d = fopen(dest, "w") ) == NULL ) { // Flawfinder: ignore
+        fclose(fp_s);
         message(ERROR, "Could not write %s: %s\n", dest, strerror(errno));
         return(-1);
     }
 
-    while ( ( c = fgetc(fd_s) ) != EOF ) {
-        fputc(c, fd_d);
+    message(DEBUG, "Calling fstat() on source file descriptor: %d\n", fileno(fp_s));
+    if ( fstat(fileno(fp_s), &filestat) < 0 ) {
+        message(ERROR, "Could not fstat() on %s: %s\n", source, strerror(errno));
+        return(-1);
     }
 
-    fclose(fd_s);
-    fclose(fd_d);
+    message(DEBUG, "Cloning permission string of source to dest\n");
+    if ( fchmod(fileno(fp_d), filestat.st_mode) < 0 ) {
+        message(ERROR, "Could not set permission mode on %s: %s\n", dest, strerror(errno));
+        return(-1);
+    }
+
+    message(DEBUG, "Copying file data...\n");
+    while ( ( c = fgetc(fp_s) ) != EOF ) { // Flawfinder: ignore (checked boundries)
+        fputc(c, fp_d);
+    }
+
+    message(DEBUG, "Done copying data, closing file pointers\n");
+    fclose(fp_s);
+    fclose(fp_d);
+
+    message(DEBUG, "Returning copy_file(%s, %s) = 0\n", source, dest);
 
     return(0);
 }
@@ -253,8 +270,7 @@ int fileput(char *path, char *string) {
     FILE *fd;
 
     message(DEBUG, "Called fileput(%s, %s)\n", path, string);
-    fd = fopen(path, "w");
-    if ( fd == NULL ) {
+    if ( ( fd = fopen(path, "w") ) == NULL ) { // Flawfinder: ignore
         message(ERROR, "Could not write to %s: %s\n", path, strerror(errno));
         return(-1);
     }
@@ -279,8 +295,7 @@ char *filecat(char *path) {
         return(NULL);
     }
 
-    fd = fopen(path, "r");
-    if ( fd == NULL ) {
+    if ( ( fd = fopen(path, "r") ) == NULL ) { // Flawfinder: ignore
         message(ERROR, "Could not read from %s: %s\n", path, strerror(errno));
         return(NULL);
     }
@@ -297,7 +312,7 @@ char *filecat(char *path) {
 
     ret = (char *) malloc(length+1);
 
-    while ( ( c = fgetc(fd) ) != EOF ) {
+    while ( ( c = fgetc(fd) ) != EOF ) { // Flawfinder: ignore (checked boundries)
         ret[pos] = c;
         pos++;
     }
