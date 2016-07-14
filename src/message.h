@@ -30,7 +30,8 @@
 #define VERBOSE3 4
 #define DEBUG 5
 
-void _message(int level, const char *function, const char *file, int line, char *format, ...)  __attribute__ ((format (gnu_printf, 5, 6)));
+/* __attribute__ isn't conditionalized as the system headers do that */
+void _message(int level, const char *function, const char *file, int line, char *format, ...)  __attribute__ ((format (printf, 5, 6)));
 void singularity_abort(int retval);
 
 #define message(a,b...) _message(a, __func__, __FILE__, __LINE__, b)
