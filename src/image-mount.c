@@ -110,8 +110,8 @@ int main(int argc, char ** argv) {
         return(1);
     }
 
-    containerimage = strdup(argv[1]);
-    mountpoint = strdup(argv[2]);
+    containerimage = xstrdup(argv[1]);
+    mountpoint = xstrdup(argv[2]);
 
     if ( is_file(containerimage) < 0 ) {
         message(ERROR, "Container image not found: %s\n", containerimage);
@@ -159,7 +159,7 @@ int main(int argc, char ** argv) {
         exec_fork_pid = fork();
         if ( exec_fork_pid == 0 ) {
 
-            argv[2] = strdup("/bin/sh");
+            argv[2] = xstrdup("/bin/sh");
 
             if ( execv("/bin/sh", &argv[2]) != 0 ) { // Flawfinder: ignore (exec* is necessary)
                 message(ERROR, "Exec of /bin/sh failed: %s\n", strerror(errno));

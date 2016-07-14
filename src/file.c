@@ -52,7 +52,7 @@ char *file_id(char *path) {
         return(NULL);
     }
 
-    ret = (char *) malloc(128);
+    ret = (char *) xmalloc(128);
     snprintf(ret, 128, "%d.%d.%lu", (int)uid, (int)filestat.st_dev, (long unsigned)filestat.st_ino); // Flawfinder: ignore
 
     message(VERBOSE2, "Generated file_id: %s\n", ret);
@@ -310,7 +310,7 @@ char *filecat(char *path) {
 
     rewind(fd);
 
-    ret = (char *) malloc(length+1);
+    ret = (char *) xmalloc(length+1);
 
     while ( ( c = fgetc(fd) ) != EOF ) { // Flawfinder: ignore (checked boundries)
         ret[pos] = c;
@@ -324,7 +324,7 @@ char *filecat(char *path) {
 }
 
 char * container_basedir(char *containerdir, char *dir) {
-    char * testdir = strdup(dir);
+    char * testdir = xstrdup(dir);
     char * prevdir = NULL;
     if ( containerdir == NULL || dir == NULL ) {
         return(NULL);
@@ -334,8 +334,8 @@ char * container_basedir(char *containerdir, char *dir) {
         if ( is_dir(joinpath(containerdir, testdir)) == 0 ) {
             return(testdir);
         }
-        prevdir = strdup(testdir);
-        testdir = dirname(strdup(testdir));
+        prevdir = xstrdup(testdir);
+        testdir = dirname(xstrdup(testdir));
     }
     return(prevdir);
 }

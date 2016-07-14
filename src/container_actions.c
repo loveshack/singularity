@@ -40,14 +40,14 @@
 int container_run(int argc, char **argv) {
     message(DEBUG, "Called container_run(%d, **argv)\n", argc);
     if ( is_exec("/.run") == 0 ) {
-        argv[0] = strdup("/.run");
+        argv[0] = xstrdup("/.run");
         message(VERBOSE, "Found /.run inside container, exec()'ing...\n");
         if ( execv("/.run", argv) != 0 ) { // Flawfinder: ignore (exec* is necessary)
             message(ERROR, "Exec of /.run failed: %s\n", strerror(errno));
             ABORT(255);
         }
     } else if ( is_exec("/singularity") == 0 ) {
-        argv[0] = strdup("/singularity");
+        argv[0] = xstrdup("/singularity");
         message(VERBOSE, "Found /singularity inside container, exec()'ing...\n");
         if ( execv("/singularity", argv) != 0 ) { // Flawfinder: ignore (exec* is necessary)
             message(ERROR, "Exec of /singularity failed: %s\n", strerror(errno));
@@ -70,7 +70,7 @@ int container_exec(int argc, char **argv) {
     }
 
     if ( is_exec("/.exec") == 0 ) {
-        argv[0] = strdup("/.exec");
+        argv[0] = xstrdup("/.exec");
         message(VERBOSE, "Found /.exec inside container, exec()'ing...\n");
         if ( execv("/.exec", argv) != 0 ) { // Flawfinder: ignore (exec* is necessary)
             message(ERROR, "Exec of /.exec failed: %s\n", strerror(errno));
@@ -98,7 +98,7 @@ int container_shell(int argc, char **argv) {
     message(DEBUG, "Called container_shell(%d, **argv)\n", argc);
 
     if ( is_exec("/.shell") == 0 ) {
-        argv[0] = strdup("/.shell");
+        argv[0] = xstrdup("/.shell");
         message(VERBOSE, "Exec()'ing /.shell\n");
         if ( execv("/.shell", argv) != 0 ) { // Flawfinder: ignore (exec* is necessary)
             message(ERROR, "Exec of /.shell failed: %s\n", strerror(errno));
@@ -109,9 +109,9 @@ int container_shell(int argc, char **argv) {
 
         message(VERBOSE, "Found /bin/bash, setting arguments --norc and --noprofile\n");
 
-        args[0] = strdup("/bin/bash");
-        args[1] = strdup("--norc");
-        args[2] = strdup("--noprofile");
+        args[0] = xstrdup("/bin/bash");
+        args[1] = xstrdup("--norc");
+        args[2] = xstrdup("--noprofile");
         for(i=1; i<=argc; i++) {
             args[i+2] = argv[i];
         }
@@ -121,7 +121,7 @@ int container_shell(int argc, char **argv) {
             message(ERROR, "Exec of /bin/bash failed: %s\n", strerror(errno));
         }
     } else {
-        argv[0] = strdup("/bin/sh");
+        argv[0] = xstrdup("/bin/sh");
         message(VERBOSE, "Exec()'ing /bin/sh...\n");
         if ( execv("/bin/sh", argv) != 0 ) { // Flawfinder: ignore (exec* is necessary)
             message(ERROR, "Exec of /bin/sh failed: %s\n", strerror(errno));
