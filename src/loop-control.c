@@ -95,7 +95,7 @@ int loop_bind(FILE *image_fp, char **loop_dev) {
             (void)loop_free(*loop_dev);
             ABORT(255);
         }
-        *loop_dev = strdup(test_loopdev);
+        *loop_dev = xstrdup(test_loopdev);
 
         message(VERBOSE, "Using loop device: %s\n", *loop_dev);
 
@@ -172,7 +172,7 @@ char * obtain_loop_dev(void) {
     }
 
     if ( devnum >= 0 ) {
-        loop_device = (char*) malloc(intlen(devnum) + 12);
+        loop_device = (char*) xmalloc(intlen(devnum) + 12);
         snprintf(loop_device, intlen(devnum) + 11, "/dev/loop%d", devnum);
 
         message(VERBOSE, "Using loop device: %s\n", loop_device);

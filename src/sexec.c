@@ -47,6 +47,7 @@
 #include "container_actions.h"
 #include "privilege.h"
 #include "message.h"
+#include "util.h"
 
 /* GNU libc takes steps to sanitize environment variables when running
    setuid.  I don't know if others (musl, ulibc?) do, and we're
@@ -184,7 +185,7 @@ int main(int argc, char ** argv) {
     }
 
     message(DEBUG, "Building configuration file location\n");
-    config_path = (char *) malloc(strlength(SYSCONFDIR, 128) + 30);
+    config_path = (char *) xmalloc(strlength(SYSCONFDIR, 128) + 30);
     snprintf(config_path, strlen(SYSCONFDIR) + 30, "%s/singularity/singularity.conf", SYSCONFDIR); // Flawfinder: ignore
     message(DEBUG, "Config location: %s\n", config_path);
 
@@ -223,7 +224,7 @@ int main(int argc, char ** argv) {
     message(DEBUG, "Set sessiondir to: %s\n", sessiondir);
 
     
-    containername = basename(strdup(containerimage));
+    containername = basename(xstrdup(containerimage));
     message(DEBUG, "Set containername to: %s\n", containername);
 
     message(DEBUG, "Setting loop_dev_* paths\n");
@@ -233,7 +234,7 @@ int main(int argc, char ** argv) {
     rewind(config_fp);
     if ( ( containerdir = config_get_key_value(config_fp, "container dir") ) == NULL ) {
         //containerdir = (char *) malloc(21);
-        containerdir = strdup("/var/singularity/mnt");
+        containerdir = xstrdup("/var/singularity/mnt");
     }
     message(DEBUG, "Set image mount path to: %s\n", containerdir);
 
@@ -241,11 +242,11 @@ int main(int argc, char ** argv) {
 
     if ( ( existing_prompt = getenv("PS1") ) != NULL ) { // Flawfinder: ignore (only used to manipulate shell prompt)
         int prompt_len = strlength(containername, 256) + strlength(existing_prompt, 512) + 16;
-        prompt = (char *) malloc(prompt_len + 1);
+        prompt = (char *) xmalloc(prompt_len + 1);
         snprintf(prompt, prompt_len, "(Singularity/%s) %s", containername, existing_prompt); // Flawfinder: ignore
     } else {
         int prompt_len = strlength(containername, 256) + 16;
-        prompt = (char *) malloc(prompt_len + 1);
+        prompt = (char *) xmalloc(prompt_len + 1);
         snprintf(prompt, prompt_len, "Singularity.%s> ", containername); // Flawfinder: ignore
     }
 
@@ -574,7 +575,7 @@ int main(int argc, char ** argv) {
                     char *dest = strtok(NULL, ",");
                     chomp(source);
                     if ( dest == NULL ) {
-                        dest = strdup(source);
+                        dest = xstrdup(source);
                     } else {
                         if ( dest[0] == ' ' ) {
                             dest++;
@@ -739,7 +740,7 @@ int main(int argc, char ** argv) {
                 // Do what we came here to do!
                 if ( command == NULL ) {
                     message(WARNING, "No command specified, launching 'shell'\n");
-                    command = strdup("shell");
+                    command = xstrdup("shell");
                 }
                 if ( strcmp(command, "run") == 0 ) {
                     message(VERBOSE, "COMMAND=run\n");
@@ -922,7 +923,7 @@ int main(int argc, char ** argv) {
             // Do what we came here to do!
             if ( command == NULL ) {
                 message(WARNING, "No command specified, launching 'shell'\n");
-                command = strdup("shell");
+                command = xstrdup("shell");
             }
             if ( strcmp(command, "run") == 0 ) {
                 message(VERBOSE, "COMMAND=run\n");
