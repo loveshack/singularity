@@ -48,6 +48,12 @@
 #include "privilege.h"
 #include "message.h"
 
+/* GNU libc takes steps to sanitize environment variables when running
+   setuid.  I don't know if others (musl, ulibc?) do, and we're
+   GNU/Linux-specific anyway.  */
+#if !__GLIBC__
+#error "The GNU C library must be used for this program"
+#endif
 
 #ifndef LOCALSTATEDIR
 #define LOCALSTATEDIR "/etc"
