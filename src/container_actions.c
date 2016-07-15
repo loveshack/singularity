@@ -155,7 +155,10 @@ int container_daemon_start(char *sessiondir) {
             message(WARNING, "Got unsupported daemon.comm command: '%s'\n", line);
         }
     }
-    fclose(comm);
+    if (fclose(comm)) {
+        message(ERROR, "Could not close %s: %s\n", joinpath(sessiondir, "daemon.comm"), strerror(errno));
+        ABORT(255);
+    }
 
     message(DEBUG, "Return container_daemon_start(%s) = 0\n", sessiondir);
     return(0);
@@ -201,9 +204,15 @@ int container_daemon_stop(char *sessiondir) {
     }
 
     message(VERBOSE, "Sending stop command to daemon process\n");
-    fputs("stop", comm);
+    if (fputs("stop", comm) == EOF) {
+        message(ERROR, "Could not write to daemon process: %s\n", strerror(errno));
+        ABORT(255);
+    }
 
-    fclose(comm);
+    if (fclose(comm)) {
+        message(ERROR, "Could not close daemon FIFO: %s\n", strerror(errno));
+        ABORT(255);
+    }
 
     message(DEBUG, "Return container_daemon_stop(%s) = 0\n", sessiondir);
     return(0);

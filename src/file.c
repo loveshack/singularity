@@ -234,7 +234,10 @@ int copy_file(char * source, char * dest) {
 
     message(DEBUG, "Opening destination file: %s\n", dest);
     if ( ( fp_d = fopen(dest, "w") ) == NULL ) { // Flawfinder: ignore
-        fclose(fp_s);
+        if (fclose(fp_s)) {
+            message(ERROR, "Could not close %s: %s\n", dest, strerror(errno));
+            ABORT(255);
+        }
         message(ERROR, "Could not write %s: %s\n", dest, strerror(errno));
         return(-1);
     }
@@ -253,12 +256,17 @@ int copy_file(char * source, char * dest) {
 
     message(DEBUG, "Copying file data...\n");
     while ( ( c = fgetc(fp_s) ) != EOF ) { // Flawfinder: ignore (checked boundries)
-        fputc(c, fp_d);
+        if (fputc(c, fp_d) == EOF) {
+            message(ERROR, "Copying failed: %s\n", strerror(errno));
+            ABORT(255);
+        }
     }
 
     message(DEBUG, "Done copying data, closing file pointers\n");
-    fclose(fp_s);
-    fclose(fp_d);
+    if (fclose(fp_s) || fclose(fp_d)) {
+        message(ERROR, "Could not close file: %s\n", strerror(errno));
+        ABORT(255);
+    }
 
     message(DEBUG, "Returning copy_file(%s, %s) = 0\n", source, dest);
 
@@ -276,7 +284,10 @@ int fileput(char *path, char *string) {
     }
 
     fprintf(fd, "%s", string);
-    fclose(fd);
+    if (fclose(fd)) {
+        message(ERROR, "Could not close %s: %s\n", path, strerror(errno));
+        ABORT(255);
+    }
 
     return(0);
 }
