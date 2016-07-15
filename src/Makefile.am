@@ -5,6 +5,8 @@ AM_CFLAGS = -Wall
 sexec_CPPFLAGS = -DSYSCONFDIR=\"$(sysconfdir)\" -DLOCALSTATEDIR=\"$(localstatedir)\" -DLIBEXECDIR=\"$(libexecdir)\" $(NAMESPACE_DEFINES) $(NO_SETNS)
 bootstrap_CPPFLAGS = -DLIBEXECDIR=\"$(libexecdir)\"
 ftrace_CPPFLAGS = -DARCH_$(SINGULARITY_ARCH)
+image_mount_LDFLAGS = -lbsd
+sexec_LDFLAGS = -lbsd
 
 dist_suidPROGRAM_INSTALL = ${INSTALL} -m 640
 

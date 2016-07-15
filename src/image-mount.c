@@ -34,6 +34,7 @@
 #include <fcntl.h>  
 #include <grp.h>
 #include <libgen.h>
+#include <bsd/string.h>
 
 #include "config.h"
 #include "mounts.h"
@@ -170,7 +171,7 @@ int main(int argc, char ** argv) {
         } else if ( exec_fork_pid > 0 ) {
             int tmpstatus;
 
-            strncpy(argv[0], "Singularity: exec", strlen(argv[0])); // Flawfinder: ignore
+            strlcpy(argv[0], "Singularity: exec", strlen(argv[0]) + 1);
 
             message(DEBUG, "Waiting for exec child to return\n");
             waitpid(exec_fork_pid, &tmpstatus, 0);
@@ -187,7 +188,7 @@ int main(int argc, char ** argv) {
     } else if ( namespace_fork_pid > 0 ) {
         int tmpstatus;
         
-        strncpy(argv[0], "Singularity: namespace", strlen(argv[0])); // Flawfinder: ignore
+        strlcpy(argv[0], "Singularity: namespace", strlen(argv[0]) + 1);
         
         message(DEBUG, "Waiting for namespace child to return\n");
         waitpid(namespace_fork_pid, &tmpstatus, 0);
