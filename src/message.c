@@ -31,7 +31,7 @@
 #include "util.h"
 #include "message.h"
 
-int messagelevel = -1;
+static int messagelevel = -1;
 
 extern const char *__progname;
 
