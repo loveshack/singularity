@@ -48,7 +48,7 @@ void *xmalloc(size_t l) {
 }
 
 char *xstrdup(const char *s) {
-    void *ds = xstrdup(s);
+    char *ds = strdup(s);
     if (ds)
         return ds;
     fprintf (stderr, "ABORT: Can't allocate memory\n");
