@@ -77,11 +77,19 @@ int loop_bind(FILE *image_fp, char **loop_dev) {
         if ( ioctl(fileno(loop_fp), LOOP_SET_FD, fileno(image_fp)) < 0 ) {
             if ( errno == 16 ) {
                 message(VERBOSE3, "Loop device is in use: %s\n", test_loopdev);
-                fclose(loop_fp);
+                if (fclose(loop_fp)) {
+                    message(ERROR, "Could not close loop device: %s\n",
+                            strerror(errno));
+                    ABORT(255);
+                }
                 continue;
             } else {
                 message(WARNING, "Could not associate image to loop %s: %s\n", test_loopdev, strerror(errno));
-                fclose(loop_fp);
+                if (fclose(loop_fp)) {
+                    message(ERROR, "Could not close loop device: %s\n",
+                            strerror(errno));
+                    ABORT(255);
+                }
                 continue;
             }
         }

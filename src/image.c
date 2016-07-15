@@ -79,7 +79,10 @@ int image_create(char *image, int size) {
 
     message(VERBOSE2, "Expanding image to %dMB\n", size);
     for(i = 0; i < size; i++ ) {
-        fseek(image_fp, 1024 * 1024, SEEK_CUR);
+        if (fseek(image_fp, 1024 * 1024, SEEK_CUR) < 0) {
+            message(ERROR, "Seek failed: %s\n", strerror(errno));
+            ABORT(255);
+        }
     }
     fprintf(image_fp, "0");
 
@@ -114,7 +117,10 @@ int image_expand(char *image, int size) {
     }
 
     message(DEBUG, "Jumping to the end of the current image file\n");
-    fseek(image_fp, 0L, SEEK_END);
+    if (fseek(image_fp, 0L, SEEK_END)) {
+        message(ERROR, "Seek failed: %s\n", strerror(errno));
+        ABORT(255);
+    }
     position = ftell(image_fp);
 
     message(DEBUG, "Removing the footer from image\n");
@@ -124,10 +130,16 @@ int image_expand(char *image, int size) {
     }
     message(VERBOSE2, "Expanding image by %dMB\n", size);
     for(i = 0; i < size; i++ ) {
-        fseek(image_fp, 1024 * 1024, SEEK_CUR);
+        if (fseek(image_fp, 1024 * 1024, SEEK_CUR)) {
+            message(ERROR, "Seek failed: %s\n", strerror(errno));
+            ABORT(255);
+        }
     }
     fprintf(image_fp, "0");
-    fclose(image_fp);
+    if (fclose(image_fp)) {
+        message(ERROR, "Could not close image file: %s\n", strerror(errno));
+        ABORT(255);
+    }
 
     message(DEBUG, "Returning image_expand(%s, %d) = 0\n", image, size);
 
