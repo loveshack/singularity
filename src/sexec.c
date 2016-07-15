@@ -779,7 +779,7 @@ int main(int argc, char ** argv) {
                 }
                 if ( strcmp(command, "start") == 0 ) {
                     message(VERBOSE, "COMMAND=start\n");
-                    //strlcpy(argv[0], "Singularity Init", strlen(argv[0]));
+                    //strncpy(argv[0], "Singularity Init", strlen(argv[0]));
 
                     if ( container_daemon_start(sessiondir) < 0 ) {
                         ABORT(255);
@@ -802,7 +802,7 @@ int main(int argc, char ** argv) {
                     }
                 }
 
-                strlcpy(argv[0], "Singularity: exec", strlen(argv[0]) + 1);
+                argv[0] = xstrdup("Singularity: exec");
 
                 message(DEBUG, "Dropping privs...\n");
 
@@ -825,7 +825,7 @@ int main(int argc, char ** argv) {
         // Wait for namespace process to finish
         } else if ( namespace_fork_pid > 0 ) {
             int tmpstatus;
-            strlcpy(argv[0], "Singularity: namespace", strlen(argv[0]) + 1);
+            argv[0] = xstrdup("Singularity: namespace");
 
             if ( drop_privs(&uinfo) < 0 ) {
                 ABORT(255);
