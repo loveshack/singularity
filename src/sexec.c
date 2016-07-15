@@ -131,6 +131,11 @@ int main(int argc, char ** argv) {
     // Get all user/group info
     uid = getuid();
     pw = getpwuid(uid);
+    if (NULL == pw) {
+        message(ERROR, "Could not obtain account information: %s\n",
+                strerror(errno));
+        ABORT(255);        
+    }
 
     message(DEBUG, "Gathering and caching user info.\n");
     if ( get_user_privs(&uinfo) < 0 ) {
@@ -309,7 +314,10 @@ int main(int argc, char ** argv) {
         } else {
             message(WARNING, "Singularity namespace daemon pid exists, but daemon not alive?\n");
         }
-        fclose(test_daemon_fp);
+        if ( fclose(test_daemon_fp) ) {
+            message(ERROR, "Could not close file %s: %s\n", joinpath(sessiondir, "daemon.pid"), strerror(errno));
+            ABORT(255);
+        }
     }
 
 
@@ -375,13 +383,21 @@ int main(int argc, char ** argv) {
         }
 
         message(DEBUG, "Resetting exclusive flock() to shared on loop_dev lockfile\n");
-        flock(loop_dev_lock_fd, LOCK_SH | LOCK_NB);
+        if ( flock(loop_dev_lock_fd, LOCK_SH | LOCK_NB) != 0 ) {
+            message(ERROR, "Failed to set shared lock on loop device lockfile %s: %s:\n",
+                    loop_dev, strerror(errno));
+            ABORT(255);
+        }
 
     } else {
         message(DEBUG, "Unable to get exclusive flock() on loop_dev lockfile\n");
 
         message(DEBUG, "Waiting to obtain shared lock on loop_dev lockfile\n");
-        flock(loop_dev_lock_fd, LOCK_SH);
+        if ( flock(loop_dev_lock_fd, LOCK_SH) != 0 ) {
+            message(ERROR, "Failed to set shared lock on loop device lockfile: %s:\n",
+                    strerror(errno));
+            ABORT(255);
+        }
 
         message(DEBUG, "Exclusive lock on loop_dev lockfile released, getting loop_dev\n");
         if ( ( loop_dev = filecat(loop_dev_cache) ) == NULL ) {
@@ -484,7 +500,7 @@ int main(int argc, char ** argv) {
 #ifdef NS_CLONE_PID
             if ( ( getenv("SINGULARITY_NO_NAMESPACE_PID") == NULL ) && // Flawfinder: ignore (only checking for existance of envar)
                     ( config_get_key_bool(config_fp, "allow pid ns", 1) > 0 ) ) {
-                unsetenv("SINGULARITY_NO_NAMESPACE_PID");
+                unsetenv("SINGULARITY_NO_NAMESPACE_PID"); /* fixme: ?? */
                 message(DEBUG, "Virtualizing PID namespace\n");
                 if ( unshare(CLONE_NEWPID) < 0 ) {
                     message(ERROR, "Could not virtualize PID namespace: %s\n", strerror(errno));
@@ -779,11 +795,11 @@ int main(int argc, char ** argv) {
                 int tmpstatus;
 
                 if ( strcmp(command, "start") == 0 ) {
-                    if ( fprintf(daemon_fp, "%d", exec_fork_pid) < 0 ) {
+                    if ( fprintf(daemon_fp, "%d", exec_fork_pid) < 0
+                         || fflush(daemon_fp) != 0 ) {
                         message(ERROR, "Could not write to daemon pid file: %s\n", strerror(errno));
                         ABORT(255);
                     }
-                    fflush(daemon_fp);
                 }
 
                 strlcpy(argv[0], "Singularity: exec", strlen(argv[0]) + 1);
@@ -842,30 +858,47 @@ int main(int argc, char ** argv) {
 
         message(VERBOSE, "Attaching to existing namespace daemon environment\n");
         pid_t exec_pid;
+        char *pidpath = joinpath(setns_dir, "pid");
 
-        if ( is_file(joinpath(setns_dir, "pid")) == 0 ) {
+        if ( is_file(pidpath) == 0 ) {
             message(DEBUG, "Connecting to existing PID namespace\n");
-            int fd = open(joinpath(setns_dir, "pid"), O_RDONLY); // Flawfinder: ignore
-            if ( setns(fd, CLONE_NEWPID) < 0 ) {
-                message(ERROR, "Could not join existing PID namespace: %s\n", strerror(errno));
+            int fd = open(pidpath, O_RDONLY); // Flawfinder: ignore
+            if (fd < 0) {
+                message(ERROR, "Could not open %s: %s\n", pidpath, strerror(errno));
                 ABORT(255);
             }
-            close(fd);
+            if ( setns(fd, CLONE_NEWPID) < 0 ) {
+                message(ERROR, "Could not join existing PID namespace: %s\n",
+                        strerror(errno));
+                ABORT(255);
+            }
+            if ( close(fd) < 0 ) {
+                message(ERROR, "Could not close %s: %s\n", pidpath, strerror(errno));
+                ABORT(255);
+            }
 
         } else {
-            message(ERROR, "Could not identify PID namespace: %s\n", joinpath(setns_dir, "pid"));
+            message(ERROR, "Could not identify PID namespace: %s\n", pidpath);
             ABORT(255);
         }
 
         // Connect to existing mount namespace
-        if ( is_file(joinpath(setns_dir, "mnt")) == 0 ) {
+        char *mntpath = joinpath(setns_dir, "mnt");
+        if ( is_file(mntpath) == 0 ) {
             message(DEBUG, "Connecting to existing mount namespace\n");
-            int fd = open(joinpath(setns_dir, "mnt"), O_RDONLY); // Flawfinder: ignore
+            int fd = open(mntpath, O_RDONLY); // Flawfinder: ignore
+            if(fd < 0) {
+                message(ERROR, "Could not open %s: %s\n", mntpath, strerror(errno));
+                ABORT(255);
+            }
             if ( setns(fd, CLONE_NEWNS) < 0 ) {
                 message(ERROR, "Could not join existing mount namespace: %s\n", strerror(errno));
                 ABORT(255);
             }
-            close(fd);
+            if (close(fd)) {
+                message(ERROR, "Could not close %s: %s", mntpath, strerror(errno));
+                ABORT(255);
+            }
 
         } else {
             message(ERROR, "Could not identify mount namespace: %s\n", joinpath(setns_dir, "mnt"));
@@ -975,7 +1008,10 @@ int main(int argc, char ** argv) {
 
     message(DEBUG, "Checking to see if we are the last process running in this sessiondir\n");
     if ( flock(sessiondirlock_fd, LOCK_EX | LOCK_NB) == 0 ) {
-        close(sessiondirlock_fd);
+        if (close(sessiondirlock_fd)) {
+            message(ERROR, "Could not close lock file: %s\n", strerror(errno));
+            ABORT(255);
+        }
 
         message(DEBUG, "Escalating privs to clean session directory\n");
         if ( escalate_privs() < 0 ) {
@@ -1001,8 +1037,10 @@ int main(int argc, char ** argv) {
 
     message(VERBOSE2, "Cleaning up...\n");
 
-    close(containerimage_fd);
-    close(sessiondirlock_fd);
+    if (close(containerimage_fd) || close(sessiondirlock_fd)) {
+        message(ERROR, "Close failed: %s\n", strerror(errno));
+        ABORT(255);
+    }
 
     free(loop_dev_lock);
     free(sessiondir);
