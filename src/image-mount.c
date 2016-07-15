@@ -171,7 +171,7 @@ int main(int argc, char ** argv) {
         } else if ( exec_fork_pid > 0 ) {
             int tmpstatus;
 
-            strlcpy(argv[0], "Singularity: exec", strlen(argv[0]) + 1);
+            argv[0] = xstrdup("Singularity: exec");
 
             message(DEBUG, "Waiting for exec child to return\n");
             waitpid(exec_fork_pid, &tmpstatus, 0);
@@ -188,7 +188,7 @@ int main(int argc, char ** argv) {
     } else if ( namespace_fork_pid > 0 ) {
         int tmpstatus;
         
-        strlcpy(argv[0], "Singularity: namespace", strlen(argv[0]) + 1);
+        argv[0] = xstrdup("Singularity: namespace");
         
         message(DEBUG, "Waiting for namespace child to return\n");
         waitpid(namespace_fork_pid, &tmpstatus, 0);
