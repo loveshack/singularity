@@ -77,7 +77,7 @@ int image_create(char *image, int size) {
     message(VERBOSE2, "Writing image header\n");
     fprintf(image_fp, LAUNCH_STRING); // Flawfinder: ignore (LAUNCH_STRING is a constant)
 
-    message(VERBOSE2, "Expanding image to %dMB\n", size);
+    message(VERBOSE2, "Expanding image to %dMiB\n", size);
     for(i = 0; i < size; i++ ) {
         if (fseek(image_fp, 1024 * 1024, SEEK_CUR) < 0) {
             message(ERROR, "Seek failed: %s\n", strerror(errno));
@@ -128,7 +128,7 @@ int image_expand(char *image, int size) {
         fprintf(stderr, "ERROR: Failed truncating the marker bit off of image %s: %s\n", image, strerror(errno));
         return(-1);
     }
-    message(VERBOSE2, "Expanding image by %dMB\n", size);
+    message(VERBOSE2, "Expanding image by %dMiB\n", size);
     for(i = 0; i < size; i++ ) {
         if (fseek(image_fp, 1024 * 1024, SEEK_CUR)) {
             message(ERROR, "Seek failed: %s\n", strerror(errno));
