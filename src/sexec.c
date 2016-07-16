@@ -325,7 +325,7 @@ int main(int argc, char ** argv) {
 // We are now running with escalated privileges until we exec
 //****************************************************************************//
 
-    message(DEBUG, "Escalating privledges\n");
+    message(DEBUG, "Escalating privileges\n");
     if ( escalate_privs() < 0 ) {
         ABORT(255);
     }
@@ -609,11 +609,11 @@ int main(int argc, char ** argv) {
                     }
 
                     if ( ( is_file(source) != 0 ) && ( is_dir(source) != 0 ) ) {
-                        message(WARNING, "Non existant 'bind path' source: '%s'\n", source);
+                        message(WARNING, "Non existent 'bind path' source: '%s'\n", source);
                         continue;
                     }
                     if ( ( is_file(joinpath(containerdir, dest)) != 0 ) && ( is_dir(joinpath(containerdir, dest)) != 0 ) ) {
-                        message(WARNING, "Non existant 'bind point' in container: '%s'\n", dest);
+                        message(WARNING, "Non existent 'bind point' in container: '%s'\n", dest);
                         continue;
                     }
 

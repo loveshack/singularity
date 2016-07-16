@@ -209,7 +209,7 @@ int _unlink(const char *fpath, const struct stat *sb, int typeflag, struct FTW *
 
 int s_rmdir(char *dir) {
 
-    message(DEBUG, "Removing dirctory: %s\n", dir);
+    message(DEBUG, "Removing directory: %s\n", dir);
     return(nftw(dir, _unlink, 32, FTW_DEPTH));
 }
 
@@ -222,7 +222,7 @@ int copy_file(char * source, char * dest) {
     message(DEBUG, "Called copy_file(%s, %s)\n", source, dest);
 
     if ( is_file(source) < 0 ) {
-        message(ERROR, "Could not copy from non-existant source: %s\n", source);
+        message(ERROR, "Could not copy from non-existent source: %s\n", source);
         return(-1);
     }
 
