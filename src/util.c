@@ -78,7 +78,7 @@ char *int2str(int num) {
 char *joinpath(char * path1, char * path2) {
     char *ret;
 
-    ret = (char *) xmalloc(strlength(path1, 2048) + strlength(path2, 2048) + 2);
+    ret = (char *) xmalloc(strlen(path1) + strlen(path2) + 2);
     snprintf(ret, strlen(path1) + strlen(path2) + 2, "%s/%s", path1, path2); // Flawfinder: ignore
 
     return(ret);
@@ -86,7 +86,7 @@ char *joinpath(char * path1, char * path2) {
 
 char *strjoin(char *str1, char *str2) {
     char *ret;
-    int len = strlength(str1, 2048) + strlength(str2, 2048) + 1;
+    int len = strlen(str1) + strlen(str2) + 1;
 
     ret = (char *) xmalloc(len);
     snprintf(ret, len, "%s%s", str1, str2); // Flawfinder: ignore

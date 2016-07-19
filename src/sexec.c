@@ -602,7 +602,7 @@ int main(int argc, char ** argv) {
 
                     message(VERBOSE2, "Found 'bind path' = %s, %s\n", source, dest);
 
-                    if ( ( homedir_base != NULL ) && ( strncmp(dest, homedir_base, strlength(homedir_base, 256)) == 0 )) {
+                    if ( ( homedir_base != NULL ) && ( strncmp(dest, homedir_base, strlen(homedir_base)) == 0 )) {
                         // Skipping path as it was already mounted as homedir_base
                         message(VERBOSE2, "Skipping '%s' as it is part of home path and already mounted\n", dest);
                         continue;
