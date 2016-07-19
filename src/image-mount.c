@@ -71,6 +71,7 @@ pid_t exec_fork_pid = 0;
 void sighandler(int sig) {
     signal(sig, sighandler);
 
+    /* fixme: not documented as signal-safe */
     printf("Caught signal: %d\n", sig);
     fflush(stdout);
 

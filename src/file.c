@@ -280,12 +280,12 @@ int fileput(char *path, char *string) {
     FILE *fd;
 
     message(DEBUG, "Called fileput(%s, %s)\n", path, string);
-    if ( ( fd = fopen(path, "w") ) == NULL ) { // Flawfinder: ignore
+    if ( ( fd = fopen(path, "w") ) == NULL // Flawfinder: ignore
+         || fprintf(fd, "%s", string) < 0 ) {
         message(ERROR, "Could not write to %s: %s\n", path, strerror(errno));
         return(-1);
     }
 
-    fprintf(fd, "%s", string);
     if (fclose(fd)) {
         message(ERROR, "Could not close %s: %s\n", path, strerror(errno));
         ABORT(255);
@@ -331,7 +331,10 @@ char *filecat(char *path) {
     }
     ret[pos] = '\0';
 
-    fclose(fd);
+    if (fclose(fd) < 0) {
+        message(ERROR, "Could not close file %s: %s", path, strerror(errno));
+        ABORT(255);
+    }
 
     return(ret);
 }
