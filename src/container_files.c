@@ -65,8 +65,18 @@ int build_passwd(char *template, char *output) {
         message(ERROR, "Could not open template passwd file %s: %s\n", output, strerror(errno));
         ABORT(255);
     }
-    fprintf(output_fp, "\n%s:x:%d:%d:%s:%s:%s\n", pwent->pw_name, pwent->pw_uid, pwent->pw_gid, pwent->pw_gecos, pwent->pw_dir, pwent->pw_shell);
-    fclose(output_fp);
+    if (fprintf(output_fp, "\n%s:x:%d:%d:%s:%s:%s\n", pwent->pw_name,
+                pwent->pw_uid, pwent->pw_gid, pwent->pw_gecos,
+                pwent->pw_dir, pwent->pw_shell)) {
+        message(ERROR, "Could not write to template passwd file %s: %s\n",
+                output, strerror(errno));
+        ABORT(255);
+    }
+    if (fclose(output_fp) < 0) {
+        message(ERROR, "Could not close template passwd file %s: %s\n",
+                output, strerror(errno));
+        ABORT(255);
+    }
 
     message(DEBUG, "Returning build_passwd(%s, %s) = 0\n", template, output);
 
@@ -116,7 +126,11 @@ int build_group(char *template, char *output) {
         message(ERROR, "Could not open template group file %s: %s\n", output, strerror(errno));
         ABORT(255);
     }
-    fprintf(output_fp, "\n%s:x:%d:%s\n", grent->gr_name, grent->gr_gid, pwent->pw_name);
+    if (fprintf(output_fp, "\n%s:x:%d:%s\n", grent->gr_name, grent->gr_gid, pwent->pw_name) < 0) {
+        message(ERROR, "Could not write template group file %s: %s\n",
+                output, strerror(errno));
+        ABORT(255);
+    }
 
     message(DEBUG, "Getting supplementary group info\n");
     groupcount = getgroups(maxgroups, gids);
@@ -130,7 +144,11 @@ int build_group(char *template, char *output) {
                         (long)gids[i], strerror(errno));
                 ABORT(255);
             }
-            fprintf(output_fp, "%s:x:%d:%s\n", gr->gr_name, gr->gr_gid, pwent->pw_name);
+            if (fprintf(output_fp, "%s:x:%d:%s\n", gr->gr_name, gr->gr_gid, pwent->pw_name) < 0) {
+                message(ERROR, "Could not write to %s: %s\n", output,
+                        strerror(errno));
+                ABORT(255);
+            }
         }
     }
 

@@ -70,13 +70,15 @@ int image_create(char *image, int size) {
 
     message(DEBUG, "Opening image 'w'\n");
     if ( ( image_fp = fopen(image, "w") ) == NULL ) { // Flawfinder: ignore
-        fprintf(stderr, "ERROR: Could not open image for writing %s: %s\n", image, strerror(errno));
+        message(ERROR, "Could not open image for writing %s: %s\n", image, strerror(errno));
         return(-1);
     }
 
     message(VERBOSE2, "Writing image header\n");
-    fprintf(image_fp, LAUNCH_STRING); // Flawfinder: ignore (LAUNCH_STRING is a constant)
-
+    if (fprintf(image_fp, LAUNCH_STRING) < 0) { // Flawfinder: ignore (LAUNCH_STRING is a constant)
+        message(ERROR, "Could not write image header: %s\n", strerror(errno));
+        return -1;
+    }
     message(VERBOSE2, "Expanding image to %dMiB\n", size);
     for(i = 0; i < size; i++ ) {
         if (fseek(image_fp, 1024 * 1024, SEEK_CUR) < 0) {
@@ -84,7 +86,10 @@ int image_create(char *image, int size) {
             ABORT(255);
         }
     }
-    fprintf(image_fp, "0");
+    if (fprintf(image_fp, "0") < 0) {
+        message(ERROR, "Could not write to image: %s\n", strerror(errno));
+        ABORT(255);
+    }
 
     message(VERBOSE2, "Making image executable\n");
     if (fchmod(fileno(image_fp), 0755) < 0) {
@@ -135,7 +140,10 @@ int image_expand(char *image, int size) {
             ABORT(255);
         }
     }
-    fprintf(image_fp, "0");
+    if (fprintf(image_fp, "0") < 0) {
+        message(ERROR, "Could not write to image: %s\n", strerror(errno));
+        ABORT(255);
+    }
     if (fclose(image_fp)) {
         message(ERROR, "Could not close image file: %s\n", strerror(errno));
         ABORT(255);
