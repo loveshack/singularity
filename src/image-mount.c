@@ -176,6 +176,8 @@ int main(int argc, char ** argv) {
 
             message(DEBUG, "Waiting for exec child to return\n");
             waitpid(exec_fork_pid, &tmpstatus, 0);
+            /* fixme: incorrect to call WEXITSTATUS without WIFEXITED
+               See also other instances.  */
             retval = WEXITSTATUS(tmpstatus);
 
             message(DEBUG, "Exec child returned (RETVAL=%d)\n", retval);
