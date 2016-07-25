@@ -237,7 +237,7 @@ int main(int argc, char ** argv) {
     }
     message(DEBUG, "Set image mount path to: %s\n", containerdir);
 
-    message(LOG, "Command=%s, Container=%s, CWD=%s, Arg1=%s\n", command, containerimage, cwd, argv[1] > 1 ? argv[1] : "");
+    message(LOG, "Command=%s, Container=%s, CWD=%s, Arg1=%s\n", command, containerimage, cwd, argv[1] ? argv[1] : "");
 
     if (container_is_image > 0 ) {
         message(DEBUG, "Checking if we are opening image as read/write\n");
@@ -711,7 +711,7 @@ int main(int argc, char ** argv) {
                 fflush(daemon_fp);
             }
 
-            strncpy(argv[0], "Singularity: exec", strlen(argv[0])); // Flawfinder: ignore
+            argv[0] = xstrdup("Singularity: exec");
 
             message(VERBOSE3, "Dropping privilege...\n");
             priv_drop();
@@ -731,7 +731,7 @@ int main(int argc, char ** argv) {
     // Wait for namespace process to finish
     } else if ( namespace_fork_pid > 0 ) {
         int tmpstatus;
-        strncpy(argv[0], "Singularity: namespace", strlen(argv[0])); // Flawfinder: ignore
+        argv[0] = xstrdup("Singularity: namespace");
 
         message(VERBOSE3, "Dropping privilege...\n");
         priv_drop();

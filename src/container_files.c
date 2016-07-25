@@ -41,26 +41,33 @@ void update_passwd_file(char *file) {
     uid_t uid = getuid();
     struct passwd *pwent = getpwuid(uid);
 
+    if (NULL == pwent) {
+        message(ERROR, "Could not get account information for uid %ld: %s\n",
+                (long) uid, strerror(errno));
+        ABORT(255);
+    }
     message(DEBUG, "Called update_passwd_file(%s)\n", file);
 
     message(VERBOSE2, "Checking for passwd file: %s\n", file);
     if ( is_file(file) < 0 ) {
-        message(WARNING, "Template passwd not found: %s\n", file);
+        message(WARNING, "passwd file not found: %s\n", file);
         return;
     }
 
     message(VERBOSE, "Updating passwd file with user info\n");
     if ( ( file_fp = fopen(file, "a") ) == NULL ) { // Flawfinder: ignore
-        message(ERROR, "Could not open template passwd file %s: %s\n", file, strerror(errno));
+        message(ERROR, "Could not open passwd file %s: %s\n", file, strerror(errno));
         ABORT(255);
     }
-    if (fprintf(file_fp, "\n%s:x:%d:%d:%s:%s:%s\n", pwent->pw_name, pwent->pw_uid, pwent->pw_gid, pwent->pw_gecos, pwent->pw_dir, pwent->pw_shell) < 0) {
-        message(ERROR, "Could not write to template passwd file %s: %s\n",
+    if (fprintf(file_fp, "\n%s:x:%d:%d:%s:%s:%s\n", pwent->pw_name,
+                pwent->pw_uid, pwent->pw_gid, pwent->pw_gecos,
+                pwent->pw_dir, pwent->pw_shell) < 0) {
+        message(ERROR, "Could not write to passwd file %s: %s\n",
                 file, strerror(errno));
         ABORT(255);
     }
     if (fclose(file_fp) < 0) {
-        message(ERROR, "Could not close template passwd file %s: %s\n",
+        message(ERROR, "Could not close passwd file %s: %s\n",
                 file, strerror(errno));
         ABORT(255);
     }
@@ -79,21 +86,32 @@ void update_group_file(char *file) {
     struct passwd *pwent = getpwuid(uid);
     struct group *grent = getgrgid(gid);
 
+    if (NULL == pwent) {
+        message(ERROR, "Could not get account information for uid %ld: %s\n",
+                (long) uid, strerror(errno));
+        ABORT(255);
+    }
+    if (NULL == grent) {
+        message(ERROR, "Could not get group information for gid %ld: %s\n",
+                (long) gid, strerror(errno));
+        ABORT(255);
+    }
+
     message(DEBUG, "Called update_group_file(%s)\n", file);
 
     message(VERBOSE2, "Checking for group file: %s\n", file);
     if ( is_file(file) < 0 ) {
-        message(WARNING, "Template group file not found: %s\n", file);
+        message(WARNING, "group file not found: %s\n", file);
         return;
     }
 
     message(VERBOSE, "Updating group file with user info\n");
     if ( ( file_fp = fopen(file, "a") ) == NULL ) { // Flawfinder: ignore
-        message(ERROR, "Could not open template group file %s: %s\n", file, strerror(errno));
+        message(ERROR, "Could not open group file %s: %s\n", file, strerror(errno));
         ABORT(255);
     }
     if (fprintf(file_fp, "\n%s:x:%d:%s\n", grent->gr_name, grent->gr_gid, pwent->pw_name) < 0) {
-        message(ERROR, "Could not write template group file %s: %s\n",
+        message(ERROR, "Could not write group file %s: %s\n",
                 file, strerror(errno));
         ABORT(255);
     }
@@ -105,12 +123,17 @@ void update_group_file(char *file) {
         struct group *gr = getgrgid(gids[i]);
         message(VERBOSE3, "Found supplementary group membership in: %d\n", gids[i]);
         if ( gids[i] != gid ) {
-            message(VERBOSE2, "Adding user's supplementary group ('%s') info to template group file\n", grent->gr_name);
-      if (fprintf(file_fp, "%s:x:%d:%s\n", gr->gr_name, gr->gr_gid, pwent->pw_name)) {
+            message(VERBOSE2, "Adding user's supplementary group ('%s') info to group file\n", grent->gr_name);
+            if (NULL == gr) {
+                message(ERROR, "Could not get supplementary group information for gid %ld: %s\n",
+                        (long)gids[i], strerror(errno));
+                ABORT(255);
+            }
+            if (fprintf(file_fp, "%s:x:%d:%s\n", gr->gr_name, gr->gr_gid, pwent->pw_name) < 0) {
                 message(ERROR, "Could not write to %s: %s\n", file,
                         strerror(errno));
                 ABORT(255);
-      }
+            }
         }
     }
 
