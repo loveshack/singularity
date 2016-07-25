@@ -202,7 +202,7 @@ int main(int argc, char ** argv) {
     }
 
     message(DEBUG, "Checking Singularity configuration file is owned by root\n");
-    if ( is_owner(config_path, 0) != 0 ) {
+    if ( is_owner(config_path, 0, 0) != 0 ) {
         message(ERROR, "Configuration file is not owned by root: %s\n", config_path);
         ABORT(255);
     }
@@ -326,7 +326,7 @@ int main(int argc, char ** argv) {
         message(ERROR, "Temporary directory does not exist %s: %s\n", sessiondir, strerror(errno));
         ABORT(255);
     }
-    if ( is_owner(sessiondir, 0) < 0 ) {
+    if ( is_owner(sessiondir, 0, 0) < 0 ) {
         message(ERROR, "Container working directory has wrong ownership: %s\n", sessiondir);
         ABORT(255);
     }
@@ -406,7 +406,7 @@ int main(int argc, char ** argv) {
         message(ERROR, "Failed creating image directory %s\n", containerdir);
         ABORT(255);
     }
-    if ( is_owner(containerdir, 0) < 0 ) {
+    if ( is_owner(containerdir, 0, 0) < 0 ) {
         message(ERROR, "Container directory is not root owned: %s\n", containerdir);
         ABORT(255);
     }
