@@ -143,7 +143,8 @@ int is_exec(char *path) {
     return(-1);
 }
 
-int is_owner(char *path, uid_t uid) {
+// fixme: does this need to check the tree up to root?
+int is_owner(char *path, uid_t uid, gid_t gid) {
     struct stat filestat;
 
     // Stat path
@@ -151,7 +152,7 @@ int is_owner(char *path, uid_t uid) {
         return(-1);
     }
 
-    if ( uid == filestat.st_uid ) {
+    if ( uid == filestat.st_uid && gid == filestat.st_gid ) {
         return(0);
     }
 
