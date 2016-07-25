@@ -40,13 +40,13 @@ int main(int argc, char ** argv) {
     long int size;
 
     if ( argv[1] == NULL ) {
-        fprintf(stderr, "USAGE: %s [singularity container image] [size in MiB]\n", argv[0]);
+        fprintf(stderr, "USAGE: %s <singularity container image> [size in MiB]\n", argv[0]);
         return(1);
     }
 
     if ( argv[2] == NULL ) {
         size = 1024;
-        message(1, "Using Default image size of %ld\n", size);
+        message(1, "Using Default image size of %ld MiB\n", size);
     } else {
         size = ( strtol(argv[2], (char **)NULL, 10) );
         message(1, "Using given image size of %ld\n", size);

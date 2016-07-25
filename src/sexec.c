@@ -132,7 +132,7 @@ int main(int argc, char ** argv) {
     // Get all user/group info
     uid = getuid();
 
-    message(VERBOSE3, "Initalizing privilege cache.\n");
+    message(VERBOSE3, "Initializing privilege cache.\n");
     priv_init();
 
     message(VERBOSE3, "Checking if we can escalate privileges properly.\n");

@@ -183,11 +183,11 @@ void bind_paths(char *rootpath) {
 //        }
 
         if ( ( is_file(source) != 0 ) && ( is_dir(source) != 0 ) ) {
-            message(WARNING, "Non existant 'bind path' source: '%s'\n", source);
+            message(WARNING, "Non existent 'bind path' source: '%s'\n", source);
             continue;
         }
         if ( ( is_file(joinpath(rootpath, dest)) != 0 ) && ( is_dir(joinpath(rootpath, dest)) != 0 ) ) {
-            message(WARNING, "Non existant 'bind point' in container: '%s'\n", dest);
+            message(WARNING, "Non existent 'bind point' in container: '%s'\n", dest);
             continue;
         }
 
