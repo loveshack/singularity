@@ -1,4 +1,4 @@
-USAGE: singularity [...] bootstrap <container path> <definition file>
+USAGE: singularity [...] bootstrap <container path> [<definition file>]
 
 The bootstrap command is useful for creating a new bootstrap or modifying an
 existing one using a definition file that describes how to build the
@@ -14,6 +14,9 @@ container. A simple bootstrap definition file may be as simple as:
 
 This simple bootstrap has within it all of the necessary bits of information
 to bootstrap a minimal container image.
+
+If <definition file> is omitted, only a very minimal filesystem is created,
+without anything to execute.
 
 note: This command must be executed as root.
 
