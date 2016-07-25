@@ -46,10 +46,10 @@ int main(int argc, char ** argv) {
 
     if ( argv[2] == NULL ) {
         size = 1024;
-        message(1, "Using default expansion of %ld\n", size);
+        message(1, "Using default expansion of %ld MiB\n", size);
     } else {
         size = ( strtol(argv[2], (char **)NULL, 10) );
-        message(1, "Using given expansion of %ld\n", size);
+        message(1, "Expanding image size by %ld MiB\n", size);
     }
 
     return(image_expand(argv[1], size));

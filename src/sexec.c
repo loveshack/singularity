@@ -237,7 +237,7 @@ int main(int argc, char ** argv) {
     }
     message(DEBUG, "Set image mount path to: %s\n", containerdir);
 
-    message(LOG, "Command=%s, Container=%s, CWD=%s, Arg1=%s\n", command, containerimage, cwd, argv[1]);
+    message(LOG, "Command=%s, Container=%s, CWD=%s, Arg1=%s\n", command, containerimage, cwd, argv[1] > 1 ? argv[1] : "");
 
     if (container_is_image > 0 ) {
         message(DEBUG, "Checking if we are opening image as read/write\n");
