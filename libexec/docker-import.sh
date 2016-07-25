@@ -45,11 +45,11 @@
 #        Consider the locale, e.g. for use of =~
 
 docker_cleanup() {
-    if [[ -n $id ]]; then
+    if [[ -n ${id:-} ]]; then
         message 1 "Cleaning up Docker container...\n"
         sudo docker rm -f $id >/dev/null
     fi
-    rm -f "$tmp"
+    rm -f "${tmp:-}"
 }
 
 # If we've started a container, we want to remove it on exit.
@@ -64,6 +64,17 @@ sing=${1:-}
 
 if [[ -f $sing ]]; then
     message ERROR "$sing exists -- not over-written\n"
+    exit 1
+fi
+
+if ! singularity_which docker >/dev/null; then
+    message ERROR "docker command not found\n"
+    exit 1
+fi
+
+# You get a pretty obscure error (with docker 1.7)
+if ! docker version >/dev/null; then
+    message ERROR "Docker daemon not running?\n"
     exit 1
 fi
 
