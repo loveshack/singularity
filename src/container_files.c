@@ -133,10 +133,19 @@ int build_group(char *template, char *output) {
     }
 
     message(DEBUG, "Getting supplementary group info\n");
-    groupcount = getgroups(maxgroups, gids);
+    if ( (groupcount = getgroups(maxgroups, gids)) < 0 ) {
+        message(ERROR, "Failed to get supplementary group list: %s\n",
+                strerror(errno));
+        ABORT(255);
+    }
 
     for (i=0; i < groupcount; i++) {
         struct group *gr = getgrgid(gids[i]);
+        if (!gr) {
+            message(ERROR, "Failed to get supplementary group list: %s\n",
+                    strerror(errno));
+            ABORT(255);
+        }
         message(VERBOSE3, "Found supplementary group membership in: %d\n", gids[i]);
         if ( gids[i] != gid ) {
             message(VERBOSE2, "Adding user's supplementary group ('%s') info to template group file\n", grent->gr_name);

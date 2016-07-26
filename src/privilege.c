@@ -44,7 +44,7 @@ int get_user_privs(struct s_privinfo *uinfo) {
 
     uinfo->gids = (gid_t *) xmalloc(sizeof(gid_t) * uinfo->gids_count);
 
-    if ( getgroups(uinfo->gids_count, uinfo->gids) < 0 ) {
+    if ( uinfo->gids_count < 0 || getgroups(uinfo->gids_count, uinfo->gids) < 0 ) {
        message(ERROR, "Could not obtain current supplementary group list: %s\n", strerror(errno));
        ABORT(255);
     }
