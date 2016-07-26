@@ -36,7 +36,6 @@
 #include <grp.h>
 #include <libgen.h>
 #include <pwd.h>
-#include <bsd/string.h>
 
 #include "config.h"
 #include "mounts.h"

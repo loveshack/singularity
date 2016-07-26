@@ -34,7 +34,6 @@
 #include <fcntl.h>  
 #include <grp.h>
 #include <libgen.h>
-#include <bsd/string.h>
 
 #include "config.h"
 #include "mounts.h"
