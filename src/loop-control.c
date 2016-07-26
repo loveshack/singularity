@@ -97,7 +97,7 @@ int loop_bind(FILE *image_fp, char **loop_dev, int autoclear) {
 
         message(VERBOSE2, "Setting loop device flags\n");
         if ( ioctl(fileno(loop_fp), LOOP_SET_STATUS64, &lo64) < 0 ) {
-            fprintf(stderr, "ERROR: Failed to set loop flags on loop device: %s\n", strerror(errno));
+            message(ERROR, "Failed to set loop flags on loop device: %s\n", strerror(errno));
             (void)ioctl(fileno(loop_fp), LOOP_CLR_FD, 0);
             (void)loop_free(*loop_dev);
             ABORT(255);

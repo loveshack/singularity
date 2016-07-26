@@ -93,12 +93,12 @@ int image_create(char *image, int size) {
 
     message(VERBOSE2, "Making image executable\n");
     if (fchmod(fileno(image_fp), 0755) < 0) {
-        fprintf(stderr, "ERROR: chmod failed for image %s: %s\n",
+        message(ERROR, "chmod failed for image %s: %s\n",
                 image, strerror(errno));
         return -1;
     }
     if (fclose(image_fp) < 0) {
-        fprintf(stderr, "ERROR: closing image failed %s: %s\n",
+        message(ERROR, "closing image failed %s: %s\n",
                 image, strerror(errno));
         return -1;
     }
@@ -117,7 +117,7 @@ int image_expand(char *image, int size) {
 
     message(DEBUG, "Opening image 'r+'\n");
     if ( ( image_fp = fopen(image, "r+") ) == NULL ) { // Flawfinder: ignore
-        fprintf(stderr, "ERROR: Could not open image for writing %s: %s\n", image, strerror(errno));
+        message(ERROR, "Could not open image for writing %s: %s\n", image, strerror(errno));
         return(-1);
     }
 
@@ -130,7 +130,7 @@ int image_expand(char *image, int size) {
 
     message(DEBUG, "Removing the footer from image\n");
     if ( ftruncate(fileno(image_fp), position-1) < 0 ) {
-        fprintf(stderr, "ERROR: Failed truncating the marker bit off of image %s: %s\n", image, strerror(errno));
+        message(ERROR, "Failed truncating the marker bit off of image %s: %s\n", image, strerror(errno));
         return(-1);
     }
     message(VERBOSE2, "Expanding image by %dMiB\n", size);
