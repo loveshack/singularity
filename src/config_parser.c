@@ -42,7 +42,7 @@ char *config_get_key_value(FILE *fp, char *key) {
     char *config_value;
     char *line;
 
-    line = (char *)malloc(MAX_LINE_LEN);
+    line = (char *)xmalloc(MAX_LINE_LEN);
 
     message(DEBUG, "Called config_get_key_value(fp, %s)\n", key);
 
@@ -50,7 +50,7 @@ char *config_get_key_value(FILE *fp, char *key) {
         if ( ( config_key = strtok(line, "=") ) != NULL ) {
             chomp(config_key);
             if ( strcmp(config_key, key) == 0 ) {
-                if ( ( config_value = strdup(strtok(NULL, "=")) ) != NULL ) {
+                if ( ( config_value = xstrdup(strtok(NULL, "=")) ) != NULL ) {
                     chomp(config_value);
                     if ( config_value[0] == ' ' ) {
                         config_value++;

@@ -93,7 +93,7 @@ int mount_image(char * loop_device, char * mount_point, int writable) {
 
 int mount_bind(char * source, char * dest, int writable) {
 
-    message(DEBUG, "Called mount_bind(%s, %d, %d)\n", source, dest, writable);
+    message(DEBUG, "Called mount_bind(%s, %s, %d)\n", source, dest, writable);
 
     message(DEBUG, "Checking that source exists and is a file or directory\n");
     if ( is_dir(source) != 0 && is_file(source) != 0 ) {
@@ -121,7 +121,7 @@ int mount_bind(char * source, char * dest, int writable) {
         }
     }
 
-    message(DEBUG, "Returning mount_bind(%s, %d, %d) = 0\n", source, dest, writable);
+    message(DEBUG, "Returning mount_bind(%s, %s, %d) = 0\n", source, dest, writable);
 
     return(0);
 }

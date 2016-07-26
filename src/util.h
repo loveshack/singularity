@@ -28,6 +28,8 @@ char *strjoin(char *str1, char *str2);
 void chomp(char *str);
 int strlength(char *string, int max_len);
 //char *random_string(int length);
+void *xmalloc(size_t l) __attribute__ ((malloc));
+char *xstrdup(const char *s) __attribute__ ((malloc));
 
 
 #define ABORT(a) {exit(a);}

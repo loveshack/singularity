@@ -36,6 +36,7 @@
 #include <grp.h>
 #include <libgen.h>
 #include <pwd.h>
+#include <bsd/string.h>
 
 #include "config.h"
 #include "mounts.h"
@@ -47,7 +48,14 @@
 #include "container_actions.h"
 #include "privilege.h"
 #include "message.h"
+#include "util.h"
 
+/* GNU libc takes steps to sanitize environment variables when running
+   setuid.  I don't know if others (musl, ulibc?) do, and we're
+   GNU/Linux-specific anyway.  */
+#if !__GLIBC__
+#error "The GNU C library must be used for this program"
+#endif
 
 #ifndef LOCALSTATEDIR
 #define LOCALSTATEDIR "/etc"
@@ -124,6 +132,11 @@ int main(int argc, char ** argv) {
     // Get all user/group info
     uid = getuid();
     pw = getpwuid(uid);
+    if (NULL == pw) {
+        message(ERROR, "Could not obtain account information: %s\n",
+                strerror(errno));
+        ABORT(255);        
+    }
 
     message(DEBUG, "Gathering and caching user info.\n");
     if ( get_user_privs(&uinfo) < 0 ) {
@@ -179,7 +192,7 @@ int main(int argc, char ** argv) {
     }
 
     message(DEBUG, "Building configuration file location\n");
-    config_path = (char *) malloc(strlength(SYSCONFDIR, 128) + 30);
+    config_path = (char *) xmalloc(strlength(SYSCONFDIR, 128) + 30);
     snprintf(config_path, strlen(SYSCONFDIR) + 30, "%s/singularity/singularity.conf", SYSCONFDIR); // Flawfinder: ignore
     message(DEBUG, "Config location: %s\n", config_path);
 
@@ -218,7 +231,7 @@ int main(int argc, char ** argv) {
     message(DEBUG, "Set sessiondir to: %s\n", sessiondir);
 
     
-    containername = basename(strdup(containerimage));
+    containername = basename(xstrdup(containerimage));
     message(DEBUG, "Set containername to: %s\n", containername);
 
     message(DEBUG, "Setting loop_dev_* paths\n");
@@ -228,7 +241,7 @@ int main(int argc, char ** argv) {
     rewind(config_fp);
     if ( ( containerdir = config_get_key_value(config_fp, "container dir") ) == NULL ) {
         //containerdir = (char *) malloc(21);
-        containerdir = strdup("/var/singularity/mnt");
+        containerdir = xstrdup("/var/singularity/mnt");
     }
     message(DEBUG, "Set image mount path to: %s\n", containerdir);
 
@@ -289,7 +302,10 @@ int main(int argc, char ** argv) {
         } else {
             message(WARNING, "Singularity namespace daemon pid exists, but daemon not alive?\n");
         }
-        fclose(test_daemon_fp);
+        if ( fclose(test_daemon_fp) ) {
+            message(ERROR, "Could not close file %s: %s\n", joinpath(sessiondir, "daemon.pid"), strerror(errno));
+            ABORT(255);
+        }
     }
 
 
@@ -297,7 +313,7 @@ int main(int argc, char ** argv) {
 // We are now running with escalated privileges until we exec
 //****************************************************************************//
 
-    message(DEBUG, "Escalating privledges\n");
+    message(DEBUG, "Escalating privileges\n");
     if ( escalate_privs() < 0 ) {
         ABORT(255);
     }
@@ -334,7 +350,7 @@ int main(int argc, char ** argv) {
     }
 
     message(DEBUG, "Checking for set loop device\n");
-    if ( ( loop_dev_lock_fd = open(loop_dev_lock, O_CREAT | O_RDWR, 0644) ) < 0 ) { // Flawfinder: ignore
+    if ( !( loop_dev_lock_fd = open(loop_dev_lock, O_CREAT | O_RDWR, 0644) ) ) { // Flawfinder: ignore
         message(ERROR, "Could not open loop_dev_lock %s: %s\n", loop_dev_lock, strerror(errno));
         ABORT(255);
     }
@@ -356,13 +372,21 @@ int main(int argc, char ** argv) {
         }
 
         message(DEBUG, "Resetting exclusive flock() to shared on loop_dev lockfile\n");
-        flock(loop_dev_lock_fd, LOCK_SH | LOCK_NB);
+        if ( flock(loop_dev_lock_fd, LOCK_SH | LOCK_NB) != 0 ) {
+            message(ERROR, "Failed to set shared lock on loop device lockfile %s: %s:\n",
+                    loop_dev, strerror(errno));
+            ABORT(255);
+        }
 
     } else {
         message(DEBUG, "Unable to get exclusive flock() on loop_dev lockfile\n");
 
         message(DEBUG, "Waiting to obtain shared lock on loop_dev lockfile\n");
-        flock(loop_dev_lock_fd, LOCK_SH);
+        if ( flock(loop_dev_lock_fd, LOCK_SH) != 0 ) {
+            message(ERROR, "Failed to set shared lock on loop device lockfile: %s:\n",
+                    strerror(errno));
+            ABORT(255);
+        }
 
         message(DEBUG, "Exclusive lock on loop_dev lockfile released, getting loop_dev\n");
         if ( ( loop_dev = filecat(loop_dev_cache) ) == NULL ) {
@@ -471,7 +495,7 @@ int main(int argc, char ** argv) {
 #ifdef NS_CLONE_PID
             if ( ( getenv("SINGULARITY_NO_NAMESPACE_PID") == NULL ) && // Flawfinder: ignore (only checking for existance of envar)
                     ( config_get_key_bool(config_fp, "allow pid ns", 1) > 0 ) ) {
-                unsetenv("SINGULARITY_NO_NAMESPACE_PID");
+                unsetenv("SINGULARITY_NO_NAMESPACE_PID"); /* fixme: ?? */
                 message(DEBUG, "Virtualizing PID namespace\n");
                 if ( unshare(CLONE_NEWPID) < 0 ) {
                     message(ERROR, "Could not virtualize PID namespace: %s\n", strerror(errno));
@@ -563,7 +587,7 @@ int main(int argc, char ** argv) {
                     char *dest = strtok(NULL, ",");
                     chomp(source);
                     if ( dest == NULL ) {
-                        dest = strdup(source);
+                        dest = xstrdup(source);
                     } else {
                         if ( dest[0] == ' ' ) {
                             dest++;
@@ -573,18 +597,18 @@ int main(int argc, char ** argv) {
 
                     message(VERBOSE2, "Found 'bind path' = %s, %s\n", source, dest);
 
-                    if ( ( homedir_base != NULL ) && ( strncmp(dest, homedir_base, strlength(homedir_base, 256)) == 0 )) {
+                    if ( ( homedir_base != NULL ) && ( strncmp(dest, homedir_base, strlen(homedir_base)) == 0 )) {
                         // Skipping path as it was already mounted as homedir_base
                         message(VERBOSE2, "Skipping '%s' as it is part of home path and already mounted\n", dest);
                         continue;
                     }
 
                     if ( ( is_file(source) != 0 ) && ( is_dir(source) != 0 ) ) {
-                        message(WARNING, "Non existant 'bind path' source: '%s'\n", source);
+                        message(WARNING, "Non existent 'bind path' source: '%s'\n", source);
                         continue;
                     }
                     if ( ( is_file(joinpath(containerdir, dest)) != 0 ) && ( is_dir(joinpath(containerdir, dest)) != 0 ) ) {
-                        message(WARNING, "Non existant 'bind point' in container: '%s'\n", dest);
+                        message(WARNING, "Non existent 'bind point' in container: '%s'\n", dest);
                         continue;
                     }
 
@@ -728,7 +752,7 @@ int main(int argc, char ** argv) {
                 // Do what we came here to do!
                 if ( command == NULL ) {
                     message(WARNING, "No command specified, launching 'shell'\n");
-                    command = strdup("shell");
+                    command = xstrdup("shell");
                 }
                 if ( strcmp(command, "run") == 0 ) {
                     message(VERBOSE, "COMMAND=run\n");
@@ -766,14 +790,14 @@ int main(int argc, char ** argv) {
                 int tmpstatus;
 
                 if ( strcmp(command, "start") == 0 ) {
-                    if ( fprintf(daemon_fp, "%d", exec_fork_pid) < 0 ) {
+                    if ( fprintf(daemon_fp, "%d", exec_fork_pid) < 0
+                         || fflush(daemon_fp) != 0 ) {
                         message(ERROR, "Could not write to daemon pid file: %s\n", strerror(errno));
                         ABORT(255);
                     }
-                    fflush(daemon_fp);
                 }
 
-                strncpy(argv[0], "Singularity: exec", strlen(argv[0])); // Flawfinder: ignore
+                argv[0] = xstrdup("Singularity: exec");
 
                 message(DEBUG, "Dropping privs...\n");
 
@@ -796,7 +820,7 @@ int main(int argc, char ** argv) {
         // Wait for namespace process to finish
         } else if ( namespace_fork_pid > 0 ) {
             int tmpstatus;
-            strncpy(argv[0], "Singularity: namespace", strlen(argv[0])); // Flawfinder: ignore
+            argv[0] = xstrdup("Singularity: namespace");
 
             if ( drop_privs(&uinfo) < 0 ) {
                 ABORT(255);
@@ -829,30 +853,47 @@ int main(int argc, char ** argv) {
 
         message(VERBOSE, "Attaching to existing namespace daemon environment\n");
         pid_t exec_pid;
+        char *pidpath = joinpath(setns_dir, "pid");
 
-        if ( is_file(joinpath(setns_dir, "pid")) == 0 ) {
+        if ( is_file(pidpath) == 0 ) {
             message(DEBUG, "Connecting to existing PID namespace\n");
-            int fd = open(joinpath(setns_dir, "pid"), O_RDONLY); // Flawfinder: ignore
-            if ( setns(fd, CLONE_NEWPID) < 0 ) {
-                message(ERROR, "Could not join existing PID namespace: %s\n", strerror(errno));
+            int fd = open(pidpath, O_RDONLY); // Flawfinder: ignore
+            if (fd < 0) {
+                message(ERROR, "Could not open %s: %s\n", pidpath, strerror(errno));
                 ABORT(255);
             }
-            close(fd);
+            if ( setns(fd, CLONE_NEWPID) < 0 ) {
+                message(ERROR, "Could not join existing PID namespace: %s\n",
+                        strerror(errno));
+                ABORT(255);
+            }
+            if ( close(fd) < 0 ) {
+                message(ERROR, "Could not close %s: %s\n", pidpath, strerror(errno));
+                ABORT(255);
+            }
 
         } else {
-            message(ERROR, "Could not identify PID namespace: %s\n", joinpath(setns_dir, "pid"));
+            message(ERROR, "Could not identify PID namespace: %s\n", pidpath);
             ABORT(255);
         }
 
         // Connect to existing mount namespace
-        if ( is_file(joinpath(setns_dir, "mnt")) == 0 ) {
+        char *mntpath = joinpath(setns_dir, "mnt");
+        if ( is_file(mntpath) == 0 ) {
             message(DEBUG, "Connecting to existing mount namespace\n");
-            int fd = open(joinpath(setns_dir, "mnt"), O_RDONLY); // Flawfinder: ignore
+            int fd = open(mntpath, O_RDONLY); // Flawfinder: ignore
+            if(fd < 0) {
+                message(ERROR, "Could not open %s: %s\n", mntpath, strerror(errno));
+                ABORT(255);
+            }
             if ( setns(fd, CLONE_NEWNS) < 0 ) {
                 message(ERROR, "Could not join existing mount namespace: %s\n", strerror(errno));
                 ABORT(255);
             }
-            close(fd);
+            if (close(fd)) {
+                message(ERROR, "Could not close %s: %s", mntpath, strerror(errno));
+                ABORT(255);
+            }
 
         } else {
             message(ERROR, "Could not identify mount namespace: %s\n", joinpath(setns_dir, "mnt"));
@@ -911,7 +952,7 @@ int main(int argc, char ** argv) {
             // Do what we came here to do!
             if ( command == NULL ) {
                 message(WARNING, "No command specified, launching 'shell'\n");
-                command = strdup("shell");
+                command = xstrdup("shell");
             }
             if ( strcmp(command, "run") == 0 ) {
                 message(VERBOSE, "COMMAND=run\n");
@@ -938,7 +979,7 @@ int main(int argc, char ** argv) {
         } else if ( exec_pid > 0 ) {
             int tmpstatus;
     
-            strncpy(argv[0], "Singularity: exec", strlen(argv[0])); // Flawfinder: ignore
+            strlcpy(argv[0], "Singularity: exec", strlen(argv[0]) + 1);
     
             message(DEBUG, "Dropping privs...\n");
 
@@ -962,7 +1003,10 @@ int main(int argc, char ** argv) {
 
     message(DEBUG, "Checking to see if we are the last process running in this sessiondir\n");
     if ( flock(sessiondirlock_fd, LOCK_EX | LOCK_NB) == 0 ) {
-        close(sessiondirlock_fd);
+        if (close(sessiondirlock_fd)) {
+            message(ERROR, "Could not close lock file: %s\n", strerror(errno));
+            ABORT(255);
+        }
 
         message(DEBUG, "Escalating privs to clean session directory\n");
         if ( escalate_privs() < 0 ) {
@@ -984,7 +1028,9 @@ int main(int argc, char ** argv) {
 
     message(VERBOSE2, "Cleaning up...\n");
 
+    /* fixme: failing */
     close(containerimage_fd);
+    /* fixme:  Is this intended, given above comment? */
     close(sessiondirlock_fd);
 
     free(loop_dev_lock);

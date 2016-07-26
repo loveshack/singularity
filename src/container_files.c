@@ -41,6 +41,11 @@ int build_passwd(char *template, char *output) {
     uid_t uid = getuid();
     struct passwd *pwent = getpwuid(uid);
 
+    if (NULL == pwent) {
+        message(ERROR, "Could not get account information for uid %ld: %s\n",
+                (long) uid, strerror(errno));
+        ABORT(255);
+    }
     message(DEBUG, "Called build_passwd(%s, %s)\n", template, output);
 
     message(VERBOSE2, "Checking for template passwd file: %s\n", template);
@@ -60,8 +65,18 @@ int build_passwd(char *template, char *output) {
         message(ERROR, "Could not open template passwd file %s: %s\n", output, strerror(errno));
         ABORT(255);
     }
-    fprintf(output_fp, "\n%s:x:%d:%d:%s:%s:%s\n", pwent->pw_name, pwent->pw_uid, pwent->pw_gid, pwent->pw_gecos, pwent->pw_dir, pwent->pw_shell);
-    fclose(output_fp);
+    if (fprintf(output_fp, "\n%s:x:%d:%d:%s:%s:%s\n", pwent->pw_name,
+                pwent->pw_uid, pwent->pw_gid, pwent->pw_gecos,
+                pwent->pw_dir, pwent->pw_shell) < 0) {
+        message(ERROR, "Could not write to template passwd file %s: %s\n",
+                output, strerror(errno));
+        ABORT(255);
+    }
+    if (fclose(output_fp) < 0) {
+        message(ERROR, "Could not close template passwd file %s: %s\n",
+                output, strerror(errno));
+        ABORT(255);
+    }
 
     message(DEBUG, "Returning build_passwd(%s, %s) = 0\n", template, output);
 
@@ -79,6 +94,17 @@ int build_group(char *template, char *output) {
     gid_t gids[maxgroups];
     struct passwd *pwent = getpwuid(uid);
     struct group *grent = getgrgid(gid);
+
+    if (NULL == pwent) {
+        message(ERROR, "Could not get account information for uid %ld: %s\n",
+                (long) uid, strerror(errno));
+        ABORT(255);
+    }
+    if (NULL == grent) {
+        message(ERROR, "Could not get group information for gid %ld: %s\n",
+                (long) gid, strerror(errno));
+        ABORT(255);
+    }
 
     message(DEBUG, "Called build_group(%s, %s)\n", template, output);
 
@@ -100,7 +126,11 @@ int build_group(char *template, char *output) {
         message(ERROR, "Could not open template group file %s: %s\n", output, strerror(errno));
         ABORT(255);
     }
-    fprintf(output_fp, "\n%s:x:%d:%s\n", grent->gr_name, grent->gr_gid, pwent->pw_name);
+    if (fprintf(output_fp, "\n%s:x:%d:%s\n", grent->gr_name, grent->gr_gid, pwent->pw_name) < 0) {
+        message(ERROR, "Could not write template group file %s: %s\n",
+                output, strerror(errno));
+        ABORT(255);
+    }
 
     message(DEBUG, "Getting supplementary group info\n");
     groupcount = getgroups(maxgroups, gids);
@@ -110,10 +140,20 @@ int build_group(char *template, char *output) {
         message(VERBOSE3, "Found supplementary group membership in: %d\n", gids[i]);
         if ( gids[i] != gid ) {
             message(VERBOSE2, "Adding user's supplementary group ('%s') info to template group file\n", grent->gr_name);
-            fprintf(output_fp, "%s:x:%d:%s\n", gr->gr_name, gr->gr_gid, pwent->pw_name);
+            if (NULL == gr) {
+                message(ERROR, "Could not get supplementary group information for gid %ld: %s\n",
+                        (long)gids[i], strerror(errno));
+                ABORT(255);
+            }
+            if (fprintf(output_fp, "%s:x:%d:%s\n", gr->gr_name, gr->gr_gid, pwent->pw_name) < 0) {
+                message(ERROR, "Could not write to %s: %s\n", output,
+                        strerror(errno));
+                ABORT(255);
+            }
         }
     }
 
+    /* fixme: this is failing when not root */
     fclose(output_fp);
 
     message(DEBUG, "Returning build_group(%s, %s) = 0\n", template, output);

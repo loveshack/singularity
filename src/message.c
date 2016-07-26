@@ -31,7 +31,7 @@
 #include "util.h"
 #include "message.h"
 
-int messagelevel = -1;
+static int messagelevel = -1;
 
 extern const char *__progname;
 
@@ -72,46 +72,46 @@ void _message(int level, const char *function, const char *file, int line, char 
 
     switch (level) {
         case ABRT:
-            prefix = strdup("ABORT");
+            prefix = xstrdup("ABORT");
             syslog_level = LOG_ALERT;
             break;
         case ERROR:
-            prefix = strdup("ERROR");
+            prefix = xstrdup("ERROR");
             syslog_level = LOG_ERR;
             break;
         case  WARNING:
-            prefix = strdup("WARNING");
+            prefix = xstrdup("WARNING");
             syslog_level = LOG_WARNING;
             break;
         case LOG:
-            prefix = strdup("LOG");
+            prefix = xstrdup("LOG");
             break;
         case DEBUG:
-            prefix = strdup("DEBUG");
+            prefix = xstrdup("DEBUG");
             break;
         case INFO:
-            prefix = strdup("INFO");
+            prefix = xstrdup("INFO");
             break;
         default:
-            prefix = strdup("VERBOSE");
+            prefix = xstrdup("VERBOSE");
             break;
     }
 
     if ( level <= LOG ) {
         char syslog_string[540]; // Flawfinder: ignore (512 max message length + 28'ish chars for header)
-        snprintf(syslog_string, 540, "%s (U=%d,P=%d)> %s", __progname, geteuid(), getpid(), message); // Flawfinder: ignore
+        snprintf(syslog_string, sizeof syslog_string, "%s (U=%d,P=%d)> %s", __progname, geteuid(), getpid(), message); // Flawfinder: ignore
 
-        syslog(syslog_level, syslog_string, strlen(syslog_string)); // Flawfinder: ignore (format is internally defined)
+        syslog(syslog_level, "%s", syslog_string);
     }
 
     if ( level <= messagelevel ) {
         char *header_string;
 
         if ( messagelevel >= DEBUG ) {
-            char *debug_string = (char *) malloc(25);
-            char *location_string = (char *) malloc(60);
-            char *tmp_header_string = (char *) malloc(80);
-            header_string = (char *) malloc(80);
+            char *debug_string = (char *) xmalloc(25);
+            char *location_string = (char *) xmalloc(60);
+            char *tmp_header_string = (char *) xmalloc(80);
+            header_string = (char *) xmalloc(80);
             snprintf(location_string, 60, "%s:%d:%s()", file, line, function); // Flawfinder: ignore
             snprintf(debug_string, 25, "[U=%d,P=%d]", geteuid(), getpid()); // Flawfinder: ignore
             snprintf(tmp_header_string, 80, "%-18s %s", debug_string, location_string); // Flawfinder: ignore
@@ -120,7 +120,7 @@ void _message(int level, const char *function, const char *file, int line, char 
             free(location_string);
             free(tmp_header_string);
         } else {
-            header_string = (char *) malloc(11);
+            header_string = (char *) xmalloc(11);
             snprintf(header_string, 10, "%-7s: ", prefix); // Flawfinder: ignore
         }
 

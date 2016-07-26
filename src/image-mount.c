@@ -34,6 +34,7 @@
 #include <fcntl.h>  
 #include <grp.h>
 #include <libgen.h>
+#include <bsd/string.h>
 
 #include "config.h"
 #include "mounts.h"
@@ -70,6 +71,7 @@ pid_t exec_fork_pid = 0;
 void sighandler(int sig) {
     signal(sig, sighandler);
 
+    /* fixme: not documented as signal-safe */
     printf("Caught signal: %d\n", sig);
     fflush(stdout);
 
@@ -110,8 +112,8 @@ int main(int argc, char ** argv) {
         return(1);
     }
 
-    containerimage = strdup(argv[1]);
-    mountpoint = strdup(argv[2]);
+    containerimage = xstrdup(argv[1]);
+    mountpoint = xstrdup(argv[2]);
 
     if ( is_file(containerimage) < 0 ) {
         message(ERROR, "Container image not found: %s\n", containerimage);
@@ -124,7 +126,7 @@ int main(int argc, char ** argv) {
     }
 
     message(DEBUG, "Opening container image: %s\n", containerimage);
-    if ( ( containerimage_fp = fopen(containerimage, "r+") ) < 0 ) { // Flawfinder: ignore
+    if ( !( containerimage_fp = fopen(containerimage, "r+") ) ) { // Flawfinder: ignore
         message(ERROR, "Could not open image %s: %s\n", containerimage, strerror(errno));
         ABORT(255);
     }
@@ -159,7 +161,7 @@ int main(int argc, char ** argv) {
         exec_fork_pid = fork();
         if ( exec_fork_pid == 0 ) {
 
-            argv[2] = strdup("/bin/bash");
+            argv[2] = xstrdup("/bin/bash");
 
             if ( execv("/bin/bash", &argv[2]) != 0 ) { // Flawfinder: ignore (exec* is necessary)
                 message(ERROR, "Exec of /bin/bash failed: %s\n", strerror(errno));
@@ -170,10 +172,12 @@ int main(int argc, char ** argv) {
         } else if ( exec_fork_pid > 0 ) {
             int tmpstatus;
 
-            strncpy(argv[0], "Singularity: exec", strlen(argv[0])); // Flawfinder: ignore
+            argv[0] = xstrdup("Singularity: exec");
 
             message(DEBUG, "Waiting for exec child to return\n");
             waitpid(exec_fork_pid, &tmpstatus, 0);
+            /* fixme: incorrect to call WEXITSTATUS without WIFEXITED
+               See also other instances.  */
             retval = WEXITSTATUS(tmpstatus);
 
             message(DEBUG, "Exec child returned (RETVAL=%d)\n", retval);
@@ -187,7 +191,7 @@ int main(int argc, char ** argv) {
     } else if ( namespace_fork_pid > 0 ) {
         int tmpstatus;
         
-        strncpy(argv[0], "Singularity: namespace", strlen(argv[0])); // Flawfinder: ignore
+        argv[0] = xstrdup("Singularity: namespace");
         
         message(DEBUG, "Waiting for namespace child to return\n");
         waitpid(namespace_fork_pid, &tmpstatus, 0);

@@ -42,7 +42,7 @@ int get_user_privs(struct s_privinfo *uinfo) {
 
     message(DEBUG, "Called get_user_privs(struct s_privinfo *uinfo)\n");
 
-    uinfo->gids = (gid_t *) malloc(sizeof(gid_t) * uinfo->gids_count);
+    uinfo->gids = (gid_t *) xmalloc(sizeof(gid_t) * uinfo->gids_count);
 
     if ( getgroups(uinfo->gids_count, uinfo->gids) < 0 ) {
        message(ERROR, "Could not obtain current supplementary group list: %s\n", strerror(errno));
@@ -128,7 +128,7 @@ int drop_privs_perm(struct s_privinfo *uinfo) {
     if ( geteuid() == 0 ) {
         message(DEBUG, "Resetting supplementary groups\n");
         if ( setgroups(uinfo->gids_count, uinfo->gids) < 0 ) {
-            fprintf(stderr, "ABOFT: Could not reset supplementary group list: %s\n", strerror(errno));
+            fprintf(stderr, "ABORT: Could not reset supplementary group list: %s\n", strerror(errno));
             return(-1);
         }
 

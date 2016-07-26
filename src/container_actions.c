@@ -40,14 +40,14 @@
 int container_run(int argc, char **argv) {
     message(DEBUG, "Called container_run(%d, **argv)\n", argc);
     if ( is_exec("/.run") == 0 ) {
-        argv[0] = strdup("/.run");
+        argv[0] = xstrdup("/.run");
         message(VERBOSE, "Found /.run inside container, exec()'ing...\n");
         if ( execv("/.run", argv) != 0 ) { // Flawfinder: ignore (exec* is necessary)
             message(ERROR, "Exec of /.run failed: %s\n", strerror(errno));
             ABORT(255);
         }
     } else if ( is_exec("/singularity") == 0 ) {
-        argv[0] = strdup("/singularity");
+        argv[0] = xstrdup("/singularity");
         message(VERBOSE, "Found /singularity inside container, exec()'ing...\n");
         if ( execv("/singularity", argv) != 0 ) { // Flawfinder: ignore (exec* is necessary)
             message(ERROR, "Exec of /singularity failed: %s\n", strerror(errno));
@@ -70,7 +70,7 @@ int container_exec(int argc, char **argv) {
     }
 
     if ( is_exec("/.exec") == 0 ) {
-        argv[0] = strdup("Singularity");
+        argv[0] = xstrdup("Singularity");
         message(VERBOSE, "Found /.exec inside container, exec()'ing...\n");
         if ( execv("/.exec", argv) != 0 ) { // Flawfinder: ignore (exec* is necessary)
             message(ERROR, "Exec of /.exec failed: %s\n", strerror(errno));
@@ -98,13 +98,13 @@ int container_shell(int argc, char **argv) {
     message(DEBUG, "Called container_shell(%d, **argv)\n", argc);
 
     if ( is_exec("/.shell") == 0 ) {
-        argv[0] = strdup("/.shell");
+        argv[0] = xstrdup("/.shell");
         message(VERBOSE, "Exec()'ing /.shell\n");
         if ( execv("/.shell", argv) != 0 ) { // Flawfinder: ignore (exec* is necessary)
             message(ERROR, "Exec of /.shell failed: %s\n", strerror(errno));
         }
     } else {
-        argv[0] = strdup("/bin/sh");
+        argv[0] = xstrdup("/bin/sh");
         message(VERBOSE, "Exec()'ing /bin/sh...\n");
         if ( execv("/bin/sh", argv) != 0 ) { // Flawfinder: ignore (exec* is necessary)
             message(ERROR, "Exec of /bin/sh failed: %s\n", strerror(errno));
@@ -138,7 +138,10 @@ int container_daemon_start(char *sessiondir) {
             message(WARNING, "Got unsupported daemon.comm command: '%s'\n", line);
         }
     }
-    fclose(comm);
+    if (fclose(comm)) {
+        message(ERROR, "Could not close %s: %s\n", joinpath(sessiondir, "daemon.comm"), strerror(errno));
+        ABORT(255);
+    }
 
     message(DEBUG, "Return container_daemon_start(%s) = 0\n", sessiondir);
     return(0);
@@ -184,9 +187,15 @@ int container_daemon_stop(char *sessiondir) {
     }
 
     message(VERBOSE, "Sending stop command to daemon process\n");
-    fputs("stop", comm);
+    if (fputs("stop", comm) == EOF) {
+        message(ERROR, "Could not write to daemon process: %s\n", strerror(errno));
+        ABORT(255);
+    }
 
-    fclose(comm);
+    if (fclose(comm)) {
+        message(ERROR, "Could not close daemon FIFO: %s\n", strerror(errno));
+        ABORT(255);
+    }
 
     message(DEBUG, "Return container_daemon_stop(%s) = 0\n", sessiondir);
     return(0);

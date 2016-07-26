@@ -39,6 +39,21 @@
 #include "message.h"
 #include "util.h"
 
+void *xmalloc(size_t l) {
+    void *m = malloc(l);
+    if (m || !l)
+        return m;
+    fprintf(stderr, "ABORT: Can't allocate memory\n");
+    abort();
+}
+
+char *xstrdup(const char *s) {
+    char *ds = strdup(s);
+    if (ds)
+        return ds;
+    fprintf (stderr, "ABORT: Can't allocate memory\n");
+    abort();
+}
 
 int intlen(int input) {
     unsigned int len = 1;
@@ -53,7 +68,7 @@ int intlen(int input) {
 char *int2str(int num) {
     char *ret;
     
-    ret = (char *) malloc(intlen(num) + 1);
+    ret = (char *) xmalloc(intlen(num) + 1);
 
     snprintf(ret, intlen(num) + 1, "%d", num); // Flawfinder: ignore
 
@@ -63,7 +78,7 @@ char *int2str(int num) {
 char *joinpath(char * path1, char * path2) {
     char *ret;
 
-    ret = (char *) malloc(strlength(path1, 2048) + strlength(path2, 2048) + 2);
+    ret = (char *) xmalloc(strlen(path1) + strlen(path2) + 2);
     snprintf(ret, strlen(path1) + strlen(path2) + 2, "%s/%s", path1, path2); // Flawfinder: ignore
 
     return(ret);
@@ -71,9 +86,9 @@ char *joinpath(char * path1, char * path2) {
 
 char *strjoin(char *str1, char *str2) {
     char *ret;
-    int len = strlength(str1, 2048) + strlength(str2, 2048) + 1;
+    int len = strlen(str1) + strlen(str2) + 1;
 
-    ret = (char *) malloc(len);
+    ret = (char *) xmalloc(len);
     snprintf(ret, len, "%s%s", str1, str2); // Flawfinder: ignore
 
     return(ret);
@@ -107,7 +122,7 @@ char *random_string(int length) {
     int i;
     int pid = getpid();
 
-    ret = (char *) malloc(length);
+    ret = (char *) xmalloc(length);
  
     srand(time(NULL) * pid);
     for (i = 0; i < length; ++i) {

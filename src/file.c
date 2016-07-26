@@ -52,7 +52,7 @@ char *file_id(char *path) {
         return(NULL);
     }
 
-    ret = (char *) malloc(128);
+    ret = (char *) xmalloc(128);
     snprintf(ret, 128, "%d.%d.%lu", (int)uid, (int)filestat.st_dev, (long unsigned)filestat.st_ino); // Flawfinder: ignore
 
     message(VERBOSE2, "Generated file_id: %s\n", ret);
@@ -150,7 +150,7 @@ int is_owner(char *path, uid_t uid) {
         return(-1);
     }
 
-    if ( uid == (int)filestat.st_uid ) {
+    if ( uid == filestat.st_uid ) {
         return(0);
     }
 
@@ -211,7 +211,7 @@ int _unlink(const char *fpath, const struct stat *sb, int typeflag, struct FTW *
 
 int s_rmdir(char *dir) {
 
-    message(DEBUG, "Removing dirctory: %s\n", dir);
+    message(DEBUG, "Removing directory: %s\n", dir);
     return(nftw(dir, _unlink, 32, FTW_DEPTH));
 }
 
@@ -224,7 +224,7 @@ int copy_file(char * source, char * dest) {
     message(DEBUG, "Called copy_file(%s, %s)\n", source, dest);
 
     if ( is_file(source) < 0 ) {
-        message(ERROR, "Could not copy from non-existant source: %s\n", source);
+        message(ERROR, "Could not copy from non-existent source: %s\n", source);
         return(-1);
     }
 
@@ -236,7 +236,10 @@ int copy_file(char * source, char * dest) {
 
     message(DEBUG, "Opening destination file: %s\n", dest);
     if ( ( fp_d = fopen(dest, "w") ) == NULL ) { // Flawfinder: ignore
-        fclose(fp_s);
+        if (fclose(fp_s)) {
+            message(ERROR, "Could not close %s: %s\n", dest, strerror(errno));
+            ABORT(255);
+        }
         message(ERROR, "Could not write %s: %s\n", dest, strerror(errno));
         return(-1);
     }
@@ -255,12 +258,17 @@ int copy_file(char * source, char * dest) {
 
     message(DEBUG, "Copying file data...\n");
     while ( ( c = fgetc(fp_s) ) != EOF ) { // Flawfinder: ignore (checked boundries)
-        fputc(c, fp_d);
+        if (fputc(c, fp_d) == EOF) {
+            message(ERROR, "Copying failed: %s\n", strerror(errno));
+            ABORT(255);
+        }
     }
 
     message(DEBUG, "Done copying data, closing file pointers\n");
-    fclose(fp_s);
-    fclose(fp_d);
+    if (fclose(fp_s) || fclose(fp_d)) {
+        message(ERROR, "Could not close file: %s\n", strerror(errno));
+        ABORT(255);
+    }
 
     message(DEBUG, "Returning copy_file(%s, %s) = 0\n", source, dest);
 
@@ -272,13 +280,16 @@ int fileput(char *path, char *string) {
     FILE *fd;
 
     message(DEBUG, "Called fileput(%s, %s)\n", path, string);
-    if ( ( fd = fopen(path, "w") ) == NULL ) { // Flawfinder: ignore
+    if ( ( fd = fopen(path, "w") ) == NULL // Flawfinder: ignore
+         || fprintf(fd, "%s", string) < 0 ) {
         message(ERROR, "Could not write to %s: %s\n", path, strerror(errno));
         return(-1);
     }
 
-    fprintf(fd, "%s", string);
-    fclose(fd);
+    if (fclose(fd)) {
+        message(ERROR, "Could not close %s: %s\n", path, strerror(errno));
+        ABORT(255);
+    }
 
     return(0);
 }
@@ -312,7 +323,7 @@ char *filecat(char *path) {
 
     rewind(fd);
 
-    ret = (char *) malloc(length+1);
+    ret = (char *) xmalloc(length+1);
 
     while ( ( c = fgetc(fd) ) != EOF ) { // Flawfinder: ignore (checked boundries)
         ret[pos] = c;
@@ -320,13 +331,16 @@ char *filecat(char *path) {
     }
     ret[pos] = '\0';
 
-    fclose(fd);
+    if (fclose(fd) < 0) {
+        message(ERROR, "Could not close file %s: %s", path, strerror(errno));
+        ABORT(255);
+    }
 
     return(ret);
 }
 
 char * container_basedir(char *containerdir, char *dir) {
-    char * testdir = strdup(dir);
+    char * testdir = xstrdup(dir);
     char * prevdir = NULL;
     if ( containerdir == NULL || dir == NULL ) {
         return(NULL);
@@ -336,8 +350,8 @@ char * container_basedir(char *containerdir, char *dir) {
         if ( is_dir(joinpath(containerdir, testdir)) == 0 ) {
             return(testdir);
         }
-        prevdir = strdup(testdir);
-        testdir = dirname(strdup(testdir));
+        prevdir = xstrdup(testdir);
+        testdir = dirname(xstrdup(testdir));
     }
     return(prevdir);
 }

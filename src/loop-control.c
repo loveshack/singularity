@@ -76,11 +76,19 @@ int loop_bind(FILE *image_fp, char **loop_dev, int autoclear) {
         if ( ioctl(fileno(loop_fp), LOOP_SET_FD, fileno(image_fp)) < 0 ) {
             if ( errno == 16 ) {
                 message(VERBOSE3, "Loop device is in use: %s\n", test_loopdev);
-                fclose(loop_fp);
+                if (fclose(loop_fp)) {
+                    message(ERROR, "Could not close loop device: %s\n",
+                            strerror(errno));
+                    ABORT(255);
+                }
                 continue;
             } else {
                 message(WARNING, "Could not associate image to loop %s: %s\n", test_loopdev, strerror(errno));
-                fclose(loop_fp);
+                if (fclose(loop_fp)) {
+                    message(ERROR, "Could not close loop device: %s\n",
+                            strerror(errno));
+                    ABORT(255);
+                }
                 continue;
             }
         }
@@ -94,7 +102,7 @@ int loop_bind(FILE *image_fp, char **loop_dev, int autoclear) {
             (void)loop_free(*loop_dev);
             ABORT(255);
         }
-        *loop_dev = strdup(test_loopdev);
+        *loop_dev = xstrdup(test_loopdev);
 
         message(VERBOSE, "Using loop device: %s\n", *loop_dev);
 
@@ -171,7 +179,7 @@ char * obtain_loop_dev(void) {
     }
 
     if ( devnum >= 0 ) {
-        loop_device = (char*) malloc(intlen(devnum) + 12);
+        loop_device = (char*) xmalloc(intlen(devnum) + 12);
         snprintf(loop_device, intlen(devnum) + 11, "/dev/loop%d", devnum);
 
         message(VERBOSE, "Using loop device: %s\n", loop_device);
@@ -207,7 +215,7 @@ int associate_loop(FILE *image_fp, FILE *loop_fp, int autoclear) {
     }
     lo64.lo_offset = image_offset(image_fp);
 
-    message(DEBUG, "Setting image offset to: %d\n", lo64.lo_offset);
+    message(DEBUG, "Setting image offset to: %zd\n", (size_t) lo64.lo_offset);
 
     message(VERBOSE2, "Associating image to loop device\n");
     if ( ioctl(loop_fd, LOOP_SET_FD, image_fd) < 0 ) {
