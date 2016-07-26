@@ -133,7 +133,10 @@ void mount_home(char *rootpath) {
     struct passwd *pw;
 
     // TODO: Functionize this
-    pw = getpwuid(getuid());
+    if ( !(pw = getpwuid(getuid())) ) {
+        message(ERROR, "Failed to get passwd info: %s\n", strerror(errno));
+        ABORT(255);
+    }
 
     message(DEBUG, "Obtaining user's homedir\n");
     homedir = pw->pw_dir;
