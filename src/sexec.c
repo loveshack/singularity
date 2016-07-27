@@ -87,6 +87,7 @@ void sighandler(int sig) {
 
 
 int main(int argc, char ** argv) {
+    FILE *loop_fp = NULL;
     FILE *containerimage_fp;
     FILE *config_fp;
     FILE *daemon_fp = NULL;
@@ -107,8 +108,6 @@ int main(int argc, char ** argv) {
     char cwd[PATH_MAX]; // Flawfinder: ignore
     int cwd_fd;
     int sessiondirlock_fd;
-    int containerimage_fd;
-    int loop_dev_fd;
     int loop_dev_lock_fd;
     int join_daemon_ns = 0;
     int retval = 0;
@@ -248,6 +247,8 @@ int main(int argc, char ** argv) {
 
     message(DEBUG, "Checking if we are opening image as read/write\n");
     if ( getenv("SINGULARITY_WRITABLE") == NULL ) { // Flawfinder: ignore (only checking for existance of getenv)
+    	int containerimage_fd;
+
         message(DEBUG, "Opening image as read only: %s\n", containerimage);
         if ( ( containerimage_fp = fopen(containerimage, "r") ) == NULL ) { // Flawfinder: ignore 
             message(ERROR, "Could not open image read only %s: %s\n", containerimage, strerror(errno));
@@ -261,6 +262,8 @@ int main(int argc, char ** argv) {
             ABORT(5);
         }
     } else {
+    	int containerimage_fd;
+
         message(DEBUG, "Opening image as read/write: %s\n", containerimage);
         if ( ( containerimage_fp = fopen(containerimage, "r+") ) == NULL ) { // Flawfinder: ignore
             message(ERROR, "Could not open image read/write %s: %s\n", containerimage, strerror(errno));
@@ -359,7 +362,7 @@ int main(int argc, char ** argv) {
         message(DEBUG, "We have exclusive flock() on loop_dev lockfile\n");
 
         message(DEBUG, "Binding container to loop interface\n");
-        if ( loop_bind(containerimage_fp, &loop_dev, 1) < 0 ) {
+        if ( ( loop_fp = loop_bind(containerimage_fp, &loop_dev, 1)) == NULL ) {
             message(ERROR, "Could not bind image to loop!\n");
             ABORT(255);
         }
@@ -393,12 +396,6 @@ int main(int argc, char ** argv) {
             ABORT(255);
         }
 
-    }
-
-    message(VERBOSE3, "Opening loop device so it stays attached\n");
-    if ( ( loop_dev_fd = open(loop_dev, O_RDONLY) ) < 0 ) { // Flawfinder: ignore
-        message(ERROR, "Could not open loop device %s: %s\n", loop_dev, strerror(errno));
-        ABORT(255);
     }
 
     message(DEBUG, "Creating container image mount path: %s\n", containerdir);
@@ -1001,6 +998,13 @@ int main(int argc, char ** argv) {
     }
 
     message(DEBUG, "Checking to see if we are the last process running in this sessiondir\n");
+
+
+    message(DEBUG, "Closing the loop device file descriptor: %s\n", loop_fp);
+    fclose(loop_fp);
+    message(DEBUG, "Closing the container image file descriptor\n");
+    fclose(containerimage_fp);
+
     if ( flock(sessiondirlock_fd, LOCK_EX | LOCK_NB) == 0 ) {
         if (close(sessiondirlock_fd)) {
             message(ERROR, "Could not close lock file: %s\n", strerror(errno));
@@ -1017,6 +1021,9 @@ int main(int argc, char ** argv) {
             message(WARNING, "Could not remove all files in %s: %s\n", sessiondir, strerror(errno));
         }
 
+        message(DEBUG, "Calling loop_free(%s)\n", loop_dev);
+        loop_free(loop_dev);
+
         if ( drop_privs(&uinfo) < 0 ) {
             ABORT(255);
         }
@@ -1027,8 +1034,6 @@ int main(int argc, char ** argv) {
 
     message(VERBOSE2, "Cleaning up...\n");
 
-    /* fixme: failing */
-    close(containerimage_fd);
     /* fixme:  Is this intended, given above comment? */
     close(sessiondirlock_fd);
 
