@@ -470,15 +470,19 @@ int main(int argc, char ** argv) {
             config_rewind();
             int slave = config_get_key_bool("mount slave", 0);
             // Privatize the mount namespaces
+#ifdef SINGULARITY_MS_SLAVE
             message(DEBUG, "Making mounts %s\n", (slave ? "slave" : "private"));
-#if MS_SLAVE
             if ( mount(NULL, "/", NULL, (slave ? MS_SLAVE : MS_PRIVATE)|MS_REC, NULL) < 0 ) {
                 message(ERROR, "Could not make mountspaces %s: %s\n", (slave ? "slave" : "private"), strerror(errno));
                 ABORT(255);
             }
 #else
-            if (slave) {
-                message(ERROR, "Slave mount not available with this kernel");
+            if ( slave > 0 ) {
+                message(WARNING, "Requested option 'mount slave' is not available on this host, using private\n");
+            }
+            message(DEBUG, "Making mounts private\n");
+            if ( mount(NULL, "/", NULL, MS_PRIVATE | MS_REC, NULL) < 0 ) {
+                message(ERROR, "Could not make mountspaces %s: %s\n", (slave ? "slave" : "private"), strerror(errno));
                 ABORT(255);
             }
 #endif
