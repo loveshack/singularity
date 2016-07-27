@@ -1001,9 +1001,15 @@ int main(int argc, char ** argv) {
 
 
     message(DEBUG, "Closing the loop device file descriptor: %s\n", loop_fp);
-    fclose(loop_fp);
+    if (fclose(loop_fp) != 0) {
+        message(ERROR, "Could not close loop device: %s\n", strerror(errno));
+        ABORT(255);
+    }
     message(DEBUG, "Closing the container image file descriptor\n");
-    fclose(containerimage_fp);
+    if (fclose(containerimage_fp) != 0) {
+        message(ERROR, "Could not close image: %s\n", strerror(errno));
+        ABORT(255);
+    }
 
     if ( flock(sessiondirlock_fd, LOCK_EX | LOCK_NB) == 0 ) {
         if (close(sessiondirlock_fd)) {
