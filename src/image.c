@@ -97,7 +97,7 @@ int image_create(char *image, int size) {
                 image, strerror(errno));
         return -1;
     }
-    if (fclose(image_fp) < 0) {
+    if (fclose(image_fp) != 0) {
         message(ERROR, "closing image failed %s: %s\n",
                 image, strerror(errno));
         return -1;

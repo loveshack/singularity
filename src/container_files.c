@@ -72,7 +72,7 @@ int build_passwd(char *template, char *output) {
                 output, strerror(errno));
         ABORT(255);
     }
-    if (fclose(output_fp) < 0) {
+    if (fclose(output_fp) != 0) {
         message(ERROR, "Could not close template passwd file %s: %s\n",
                 output, strerror(errno));
         ABORT(255);
