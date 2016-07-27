@@ -67,7 +67,7 @@ void update_passwd_file(char *file) {
                 file, strerror(errno));
         ABORT(255);
     }
-    if (fclose(file_fp) < 0) {
+    if (fclose(file_fp) != 0) {
         message(ERROR, "Could not close passwd file %s: %s\n",
                 file, strerror(errno));
         ABORT(255);

@@ -333,7 +333,7 @@ char *filecat(char *path) {
     }
     ret[pos] = '\0';
 
-    if (fclose(fd) < 0) {
+    if (fclose(fd) != 0) {
         message(ERROR, "Could not close file %s: %s", path, strerror(errno));
         ABORT(255);
     }
