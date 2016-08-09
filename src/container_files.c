@@ -140,25 +140,20 @@ int build_group(char *template, char *output) {
     }
 
     for (i=0; i < groupcount; i++) {
-        struct group *gr = getgrgid(gids[i]);
-        if (!gr) {
-            message(ERROR, "Failed to get supplementary group list: %s\n",
-                    strerror(errno));
-            ABORT(255);
-        }
-        message(VERBOSE3, "Found supplementary group membership in: %d\n", gids[i]);
-        if ( gids[i] != gid ) {
-            message(VERBOSE2, "Adding user's supplementary group ('%s') info to template group file\n", grent->gr_name);
-            if (NULL == gr) {
-                message(ERROR, "Could not get supplementary group information for gid %ld: %s\n",
-                        (long)gids[i], strerror(errno));
+        if ( gids[i] < 65534 && gids[i] >= 500 ) {
+            struct group *gr = getgrgid(gids[i]);
+            if (!gr) {
+                message(ERROR, "Failed to get supplementary group list for gid %ld: %s\n",
+                        (long) gids[i], strerror(errno));
                 ABORT(255);
             }
-            if (fprintf(output_fp, "%s:x:%d:%s\n", gr->gr_name, gr->gr_gid, pwent->pw_name) < 0) {
-                message(ERROR, "Could not write to %s: %s\n", output,
-                        strerror(errno));
-                ABORT(255);
+            message(VERBOSE3, "Found supplementary group membership in: %d\n", gids[i]);
+            if ( gids[i] != gid ) {
+                message(VERBOSE2, "Adding user's supplementary group ('%s') info to template group file\n", grent->gr_name);
+                fprintf(output_fp, "%s:x:%d:%s\n", gr->gr_name, gr->gr_gid, pwent->pw_name);
             }
+        } else {
+            message(VERBOSE, "Group id '%d' is out of bounds\n", gids[i]);
         }
     }
 
