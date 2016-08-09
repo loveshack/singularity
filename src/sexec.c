@@ -1000,7 +1000,7 @@ int main(int argc, char ** argv) {
     message(DEBUG, "Checking to see if we are the last process running in this sessiondir\n");
 
 
-    message(DEBUG, "Closing the loop device file descriptor: %s\n", loop_fp);
+    message(DEBUG, "Closing the loop device file descriptor\n");
     if (fclose(loop_fp) != 0) {
         message(ERROR, "Could not close loop device: %s\n", strerror(errno));
         ABORT(255);
