@@ -135,6 +135,8 @@ int build_group(char *template, char *output) {
 
     message(DEBUG, "Getting supplementary group info\n");
     if ( (groupcount = getgroups(maxgroups, gids)) < 0 ) {
+        /* While it's not specified whether the egid is included, so
+         * it should return > 0, but it is included by glibc.  */
         message(ERROR, "Failed to get supplementary group list: %s\n",
                 strerror(errno));
         ABORT(255);
@@ -143,11 +145,9 @@ int build_group(char *template, char *output) {
     for (i=0; i < groupcount; i++) {
         if ( gids[i] < UINT_MAX && gids[i] >= 500 ) {
             struct group *gr = getgrgid(gids[i]);
-            if (!gr) {
-                message(ERROR, "Failed to get supplementary group list for gid %ld: %s\n",
-                        (long) gids[i], strerror(errno));
-                ABORT(255);
-            }
+            /* No error if there's no entry (common with resource
+             * manager-added groups).  */
+            if (!gr) continue;
             message(VERBOSE3, "Found supplementary group membership in: %d\n", gids[i]);
             if ( gids[i] != gid ) {
                 message(VERBOSE2, "Adding user's supplementary group ('%s') info to template group file\n", grent->gr_name);
