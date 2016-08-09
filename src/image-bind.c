@@ -43,7 +43,7 @@
 #include "message.h"
 
 
-int main(int argc, char ** argv) {
+int main(int argc __attribute__((unused)), char ** argv) {
     uid_t uid = geteuid();
 
     if ( argv[1] == NULL || argv[2] == NULL ) {

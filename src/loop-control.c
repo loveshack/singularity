@@ -45,12 +45,13 @@
 
 
 FILE *loop_bind(FILE *image_fp, char **loop_dev, int autoclear) {
-    struct loop_info64 lo64 = {0};
+    struct loop_info64 lo64;
     FILE *loop_fp;
     int i;
 
     message(DEBUG, "Called loop_bind(image_fp, **{loop_dev)\n");
 
+    memset(&lo64, 0, sizeof lo64);
     if ( autoclear > 0 ) {
         lo64.lo_flags = LO_FLAGS_AUTOCLEAR;
     }

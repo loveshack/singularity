@@ -88,7 +88,7 @@ void sighandler(int sig) {
 
 
 
-int main(int argc, char ** argv) {
+int main(int argc __attribute__((unused)), char ** argv) {
     FILE *loop_fp;
     FILE *containerimage_fp;
     char *containerimage;

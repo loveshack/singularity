@@ -205,7 +205,9 @@ int s_mkpath(char *dir, mode_t mode) {
     return(0);
 }
 
-int _unlink(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
+int _unlink(const char *fpath, const struct stat *sb __attribute__((unused)),
+            int typeflag __attribute__((unused)),
+            struct FTW *ftwbuf __attribute__((unused))) {
 //    printf("remove(%s)\n", fpath);
     return(remove(fpath));
 }
