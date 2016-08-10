@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <limits.h>
 #include <pwd.h>
 #include <errno.h> 
 #include <string.h>
@@ -140,7 +141,7 @@ int build_group(char *template, char *output) {
     }
 
     for (i=0; i < groupcount; i++) {
-        if ( gids[i] < 65534 && gids[i] >= 500 ) {
+        if ( gids[i] < UINT_MAX && gids[i] >= 500 ) {
             struct group *gr = getgrgid(gids[i]);
             if (!gr) {
                 message(ERROR, "Failed to get supplementary group list for gid %ld: %s\n",
@@ -150,7 +151,7 @@ int build_group(char *template, char *output) {
             message(VERBOSE3, "Found supplementary group membership in: %d\n", gids[i]);
             if ( gids[i] != gid ) {
                 message(VERBOSE2, "Adding user's supplementary group ('%s') info to template group file\n", grent->gr_name);
-                fprintf(output_fp, "%s:x:%d:%s\n", gr->gr_name, gr->gr_gid, pwent->pw_name);
+                fprintf(output_fp, "%s:x:%u:%s\n", gr->gr_name, gr->gr_gid, pwent->pw_name);
             }
         } else {
             message(VERBOSE, "Group id '%d' is out of bounds\n", gids[i]);
