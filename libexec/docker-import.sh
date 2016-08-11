@@ -78,10 +78,12 @@ if ! docker version >/dev/null; then
     exit 1
 fi
 
-if ! [[ null = $(docker inspect --format='{{json .State}}' "$dock") ]]; then
-    message ERROR "Docker image required, not container\n"
-    exit 1
-fi
+op=$(docker inspect --format='{{json .State}}' "$dock" 2>&1)
+case $op in
+    Error:*) message ERROR "Docker $op\n"; exit 1;;
+    null) :;;
+    *) message ERROR "Docker image required, not container\n"; exit 1;;
+esac
 
 # We need to have the default entrypoint to run df, and we'd have to
 # generate /singularity differently with a non-default one.
@@ -183,6 +185,11 @@ if ! cmd=$(docker inspect --format='{{json .Config.Cmd}}' "$dock"); then
     exit 1
 fi
 
+if ! env=$(docker inspect --format='{{json .ContainerConfig.Env}}' "$dock"); then
+    message ERROR "docker inspect failed\n"
+    exit 1
+fi
+
 if [[ $cmd != null ]]; then
     cmd=$(IFS='[],'; echo $cmd)
     cmd=${cmd:1}            # no leading blank
@@ -192,9 +199,22 @@ if [[ $entry != null ]]; then
     entry=${entry:1}
 fi
 
+tmp=$(mktemp)
+if [[ $env != null ]]; then
+    # Need to lose outer quotes, hence eval below
+    cat <<EOF >$tmp
+set -a
+$(IFS='[],'; eval echo $env)
+set +a
+EOF
+    if ! singularity -q copy "$sing" -p "$tmp" /environment; then
+       message ERROR "singularity copy failed\n"
+       exit 1
+   fi
+fi
+
 if [[ $cmd != null || $entry != null ]]; then
     # It's difficult to avoid this by piping into singularity exec.
-    tmp=$(mktemp)
     message 1 "Populating /singularity...\n"
     if [[ $entry = null ]]; then
         # Since the default entrypoint is /bin/sh -c, just inline the
@@ -202,11 +222,8 @@ if [[ $cmd != null || $entry != null ]]; then
         # overridden by the command line.
         cat <<EOF >"$tmp"
 #!/bin/sh
-if [ -n "\$1" ]; then
-    "\$@"
-else
-    $cmd
-fi
+. /environment
+$cmd "\$@"
 EOF
     else
         # cmd is the single argument of the entrypoint, so we need an
@@ -218,6 +235,7 @@ EOF
         #        to be for singularity.
         cat <<EOF >"$tmp"
 #!/bin/sh
+. /environment
 if [ -z "\$1" ]; then
     $entry "$cmd"
 else
