@@ -200,6 +200,8 @@ if [[ $entry != null ]]; then
 fi
 
 tmp=$(mktemp)
+chmod 0644 $tmp
+
 if [[ $env != null ]]; then
     # Need to lose outer quotes, hence eval below
     cat <<EOF >$tmp
