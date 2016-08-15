@@ -190,8 +190,7 @@ int main(int argc, char ** argv) {
     }
 
     message(DEBUG, "Building configuration file location\n");
-    config_path = (char *) xmalloc(strlength(SYSCONFDIR, 128) + 30);
-    snprintf(config_path, strlen(SYSCONFDIR) + 30, "%s/singularity/singularity.conf", SYSCONFDIR); // Flawfinder: ignore
+    config_path = joinpath(SYSCONFDIR, "singularity/singularity.conf");
     message(DEBUG, "Config location: %s\n", config_path);
 
     message(DEBUG, "Checking Singularity configuration is a file: %s\n", config_path);
@@ -211,6 +210,8 @@ int main(int argc, char ** argv) {
         message(ERROR, "Could not open config file %s: %s\n", config_path, strerror(errno));
         ABORT(255);
     }
+
+    free(config_path);
 
     // TODO: Offer option to only run containers owned by root (so root can approve
     // containers)
