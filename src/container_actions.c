@@ -39,18 +39,19 @@
 
 int container_run(int argc, char **argv) {
     message(DEBUG, "Called container_run(%d, **argv)\n", argc);
-    if ( is_exec("/.run") == 0 ) {
-        argv[0] = xstrdup("/.run");
-        message(VERBOSE, "Found /.run inside container, exec()'ing...\n");
-        if ( execv("/.run", argv) != 0 ) { // Flawfinder: ignore (exec* is necessary)
-            message(ERROR, "Exec of /.run failed: %s\n", strerror(errno));
-            ABORT(255);
-        }
-    } else if ( is_exec("/singularity") == 0 ) {
+    // Try /singularity first (as used by v2.0 containers)
+    if ( is_exec("/singularity") == 0 ) {
         argv[0] = xstrdup("/singularity");
         message(VERBOSE, "Found /singularity inside container, exec()'ing...\n");
         if ( execv("/singularity", argv) != 0 ) { // Flawfinder: ignore (exec* is necessary)
             message(ERROR, "Exec of /singularity failed: %s\n", strerror(errno));
+            ABORT(255);
+        }
+    } else if ( is_exec("/.run") == 0 ) {
+        argv[0] = xstrdup("/.run");
+        message(VERBOSE, "Found /.run inside container, exec()'ing...\n");
+        if ( execv("/.run", argv) != 0 ) { // Flawfinder: ignore (exec* is necessary)
+            message(ERROR, "Exec of /.run failed: %s\n", strerror(errno));
             ABORT(255);
         }
     } else {
