@@ -40,12 +40,11 @@
 char *config_get_key_value(FILE *fp, char *key) {
     char *config_key;
     char *config_value;
-    char *line;
-
-    line = (char *)xmalloc(MAX_LINE_LEN);
+    char line[MAX_LINE_LEN];
 
     message(DEBUG, "Called config_get_key_value(fp, %s)\n", key);
 
+    errno = 0;
     while ( fgets(line, MAX_LINE_LEN, fp) ) {
         if ( ( config_key = strtok(line, "=") ) != NULL ) {
             chomp(config_key);
@@ -61,7 +60,10 @@ char *config_get_key_value(FILE *fp, char *key) {
             }
         }
     }
-    free(line);
+    if ( errno != 0 ) {
+        message(ERROR, "Reading config file failed: %s\n", strerror(errno));
+        ABORT(255);
+    }
 
     message(DEBUG, "Return config_get_key_value(fp, %s) = NULL\n", key);
     return(NULL);
