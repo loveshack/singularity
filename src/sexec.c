@@ -983,7 +983,7 @@ int main(int argc, char ** argv) {
         } else if ( exec_pid > 0 ) {
             int tmpstatus;
     
-            strlcpy(argv[0], "Singularity: exec", strlen(argv[0]) + 1);
+            argv[0] = xstrdup("Singularity: exec");
     
             message(DEBUG, "Dropping privs...\n");
 
