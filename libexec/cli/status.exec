@@ -68,7 +68,7 @@ done
 # still!
 
 # This is a configurable option, needs to be set accordingly!
-SESSION_GLOB="/tmp/.singularity-session-${USERID}.*/daemon.pid"
+SESSION_GLOB="${TMPDIR:-/tmp}/.singularity-session-${USERID}.*/daemon.pid"
 
 
 # Show status here...

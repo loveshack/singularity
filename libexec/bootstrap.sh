@@ -38,7 +38,7 @@ singularity_import linux_build
 
 SINGULARITY_BUILDDEF="${1:-}"
 shift
-SINGULARITY_TMPDIR=`mktemp -d /tmp/singularity-bootstrap.XXXXXXX`
+SINGULARITY_TMPDIR=`mktemp --tmpdir -d singularity-bootstrap.XXXXXXX`
 PATH=/bin:/sbin:$PATH
 
 export SINGULARITY_TMPDIR SINGULARITY_BUILDDEF

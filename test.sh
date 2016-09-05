@@ -16,7 +16,7 @@ fi
 
 MESSAGELEVEL=3
 STARTDIR=`pwd`
-TEMPDIR=`mktemp -d /tmp/singularity-test.XXXXXX`
+TEMPDIR=`mktemp --tmpdir -d singularity-test.XXXXXX`
 CONTAINER="container.img"
 SINGULARITY_CACHEDIR="$TEMPDIR"
 export SINGULARITY_CACHEDIR MESSAGELEVEL
