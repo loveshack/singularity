@@ -40,7 +40,7 @@ Bootstrap() {
     echo " root:x:0:" > "$SINGULARITY_BUILD_ROOT/etc/group"
     echo "127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4" > "$SINGULARITY_BUILD_ROOT/etc/hosts"
 
-    curl "$MIRROR" > "$SINGULARITY_BUILD_ROOT/bin/busybox"
+    "$CURL" "$MIRROR" > "$SINGULARITY_BUILD_ROOT/bin/busybox"
 
     chmod 0755 "$SINGULARITY_BUILD_ROOT/bin/busybox"
 
