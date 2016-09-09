@@ -1,4 +1,4 @@
-AC_PREREQ(2.59)
+AC_PREREQ(2.60)
 AC_INIT([singularity],[2.1],[gmkurtzer@lbl.gov])
 
 
@@ -24,6 +24,7 @@ case $target_cpu in
 esac
 AC_SUBST(SINGULARITY_ARCH)
 
+AC_USE_SYSTEM_EXTENSIONS([_GNU_SOURCE])
 AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_SRCDIR([.])
 AC_CONFIG_HEADERS([src/config.h])

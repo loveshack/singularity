@@ -18,6 +18,7 @@
  * 
  */
 
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -30,7 +31,6 @@
 #include <string.h>
 #include <fcntl.h>  
 
-#include "config.h"
 #include "container_actions.h"
 #include "util.h"
 #include "file.h"

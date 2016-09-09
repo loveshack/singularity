@@ -19,6 +19,7 @@
  */
 
 
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -29,7 +30,6 @@
 #include <grp.h>
 
 #include "privilege.h"
-#include "config.h"
 #include "file.h"
 #include "util.h"
 #include "message.h"

@@ -18,7 +18,7 @@
  * 
  */
 
-
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <linux/loop.h>
@@ -30,7 +30,6 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 
-#include "config.h"
 #include "loop-control.h"
 #include "util.h"
 #include "file.h"

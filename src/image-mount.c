@@ -18,7 +18,7 @@
  * 
  */
 
-#define _GNU_SOURCE
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -35,7 +35,6 @@
 #include <grp.h>
 #include <libgen.h>
 
-#include "config.h"
 #include "mounts.h"
 #include "util.h"
 #include "file.h"

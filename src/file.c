@@ -19,8 +19,7 @@
  */
 
 
-#define _XOPEN_SOURCE 500 // For nftw
-#define _GNU_SOURCE
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -35,7 +34,6 @@
 #include <ftw.h>
 #include <time.h>
 
-#include "config.h"
 #include "util.h"
 #include "message.h"
 
