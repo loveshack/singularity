@@ -228,7 +228,12 @@ parse_opts() {
     echo "$NEWOPTS" | sed -e 's/\\/\\\\/g'
 }
 
-
+# For image $1, run remaining command args on host with image on /mnt
+with_mount() {
+    local img=$1
+    shift
+    echo "$*" | singularity mount "$img" /mnt >/dev/null
+}
 
 
 if [ "${DEBUG:-}" = "1" ]; then
