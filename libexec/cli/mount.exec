@@ -85,7 +85,7 @@ if [ ! -d "$MOUNT" ]; then
     exit 1
 fi
 
-cat <<EOF
+[ $MESSAGELEVEL -gt 0 ] && cat <<EOF
 
 Mounting image '$IMAGE' into '$MOUNT'
 

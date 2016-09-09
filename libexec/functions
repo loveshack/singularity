@@ -232,7 +232,7 @@ parse_opts() {
 with_mount() {
     local img=$1
     shift
-    echo "$*" | singularity mount "$img" /mnt >/dev/null
+    echo "$*" | singularity -q mount "$img" /mnt
 }
 
 
