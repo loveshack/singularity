@@ -44,23 +44,30 @@
 #          properly, in particular "shell" v. "exec"
 #        Consider the locale, e.g. for use of =~
 
+# Avoid the set -u horror
+set +u
+
 docker_cleanup() {
-    if [[ -n ${id:-} ]]; then
+    if [[ -n $id ]]; then
         message 1 "Cleaning up Docker container...\n"
         sudo docker rm -f $id >/dev/null
     fi
-    rm -f "${tmp:-}"
+    rm -f "$tmp"
 }
 
 # If we've started a container, we want to remove it on exit.
 trap docker_cleanup 0
 
-if [[ -z ${FILE:-} ]]; then
+# Used below for copying into image
+tmp=$(mktemp)
+chmod 0644 "$tmp"
+
+if [[ -z $FILE ]]; then
     message ERROR "No Docker image specified (with --file)\n"
     exit 1
 fi
 dock=$FILE
-sing=${1:-}
+sing=$1
 
 if [[ -f $sing ]]; then
     message ERROR "$sing exists -- not over-written\n"
@@ -175,8 +182,6 @@ fi |
   fi
 
 # Populate /singularity to reflect Docker semantics.  Quoting is a pain.
-# This generates a script stream to feed to singularity exec, avoiding a
-# scratch file, but perhaps the file would be better.
 # Note that the Docker semantics for the entrypoint and cmd aren't too
 # clear <https://docs.docker.com/engine/reference/builder/>.
 
@@ -190,6 +195,7 @@ if ! env=$(docker inspect --format='{{json .ContainerConfig.Env}}' "$dock"); the
     exit 1
 fi
 
+# Split json lists into space-separated words
 if [[ $cmd != null ]]; then
     cmd=$(IFS='[],'; echo $cmd)
     cmd=${cmd:1}            # no leading blank
@@ -198,9 +204,6 @@ if [[ $entry != null ]]; then
     entry=$(IFS='[],'; echo $entry)
     entry=${entry:1}
 fi
-
-tmp=$(mktemp)
-chmod 0644 $tmp
 
 if [[ $env != null ]]; then
     # Need to lose outer quotes, hence eval below
@@ -215,8 +218,13 @@ EOF
    fi
 fi
 
-if [[ $cmd != null || $entry != null ]]; then
-    # It's difficult to avoid this by piping into singularity exec.
+if ! with_mount "$sing" "test -a /mnt/bin/sh"; then
+    # Fixme: Ignore environment and just link to /singularity in this case.
+    # Alternatively, maybe copy in static busybox?
+    message WARNING "No /bin/sh in image: its use will be limited\n"
+elif [[ $cmd != null || $entry != null ]]; then
+    # It's difficult to avoid the tmp file by piping into singularity exec.
+    # Fixme: Use singularity mount, as above, to avoid it?
     message 1 "Populating /singularity...\n"
     if [[ $entry = null ]]; then
         # Since the default entrypoint is /bin/sh -c, just inline the
