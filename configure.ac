@@ -35,6 +35,14 @@ AC_PROG_CC
 AM_INIT_AUTOMAKE
 AM_PROG_CC_C_O
 
+BASH_COMPLETION_DIR=$sysconfdir/bash_completion.d
+AC_ARG_WITH([bash-completion-dir],
+    AS_HELP_STRING([--with-bash-completion-dir[=PATH]],
+        [Install the bash auto-completion script in this directory.
+         For example, /etc/bash_completion.d @<:@default=sysconfdir/bash_completion.d@:>@]),
+    [BASH_COMPLETION_DIR="$with_bash_completion_dir"])
+AC_SUBST([BASH_COMPLETION_DIR])
+
 AC_MSG_CHECKING([for namespace: CLONE_NEWPID])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#define _GNU_SOURCE
                                      #include <sched.h>

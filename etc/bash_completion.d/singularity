@@ -1,4 +1,4 @@
-#!/bin/bash
+#-*- mode: shell-script;-*-
 
 # Simple Bash completion for singularity
 

@@ -54,6 +54,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_libexecdir}/singularity/image-mount
 %{_bindir}/singularity
 %{_bindir}/run-singularity
+%dir %{_sysconfdir}/bash_completion.d
+%{_sysconfdir}/bash_completion.d/singularity
 
 
 
