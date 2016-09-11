@@ -1,0 +1,75 @@
+#!/bin/bash
+
+# Simple Bash completion for singularity
+
+# Copyright (C) 2016  Dave Love
+
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with the
+#    distribution.
+
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+# Can't make this conditional on "have singualarity", which won't work
+# in EPEL6.
+
+# subcoommands
+_singularity_cmds=$(singularity help | awk '/^   +[a-z]+/ {print $1}')
+# global options (before subcommands)
+_singularity_global_opts=$(_parse_help singularity)
+
+# Don't know when this came in -- in bash-completion 1.3 (EPEL 6), at least
+if type _get_comp_words_by_ref >&/dev/null; then
+    _singularity_gcw=1
+fi
+
+_singualrity() {
+    local cur prev arg IFS=$' \t\n'
+    # No need for LC_ALL=C
+
+    if [[ -n $_singularity_gcw ]]; then
+        _get_comp_words_by_ref cur prev
+    else
+        cur=${COMP_WORDS[COMP_CWORD]}
+        prev=${COMP_WORDS[COMP_CWORD-1]}
+    fi
+    COMPREPLY=()
+
+    # stop at or after a help or version option
+    for w in $cur $prev; do
+        case $w in
+            (-h|--help|--version|-v|help) return 0;;
+        esac
+    done
+
+    _get_first_arg
+    if [[ -z $arg ]]; then
+        # no sub-command yet -- only complete on one or global options
+        COMPREPLY=( $(compgen -W "$_singularity_global_opts $_singularity_cmds" -- "$cur") )
+        return 0
+    fi
+    # Complete after a sub-command.  This isn't strictly right as we
+    # can complete file names before options.
+    # Fixme: specialize for each subcommand
+    COMPREPLY=( $(compgen -f -W "help -h --help $(_parse_help "singularity $arg")" -- "$cur" ) )
+}
+complete -F _singualrity singularity
