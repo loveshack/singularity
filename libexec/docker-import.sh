@@ -31,26 +31,34 @@
 
 # The basic technique is:
 #   * Create a docker container from the image
-#   * Figure out the singularity container size from that
+#   * Estimate the singularity container size from that, and iterate if
+#     the contents don't fit
 #   * Create the singularity container
 #   * docker export | singularity import
 #   * Clean up
-# It's partly obscured by error checking and recovery in verbose
-# if blocks in Singularity style, and determining the size and possible
+# The structure is partly obscured by error checking and recovery in verbose
+# if blocks in Singularity style; also determining the size and possible
 # /singularity contents is complex.
+# Apart from docker, mktemp and awk are required.
 
-# Fixme: Check docker "Os" is "linux" [can it be anything else?]
-#          Are there any guarantees of contents, like coreutils?
-#        Maybe accept docker container instead of image?
-#        Options to set extra, tarfactor in import.exec (messy because
-#          they're probably specific to the source)
-#        Convention for singularity container metadata that could be
-#          extracted from docker in this case
-#        Can it be sped up somehow?  This takes ~1 min with the minimal
-#          fedora image and ~75s with one of ~1GB.
-#        Treatment of entrypoint/cmd likely still doesn't match docker
-#          properly, in particular "shell" v. "exec"
-#        Consider the locale, e.g. for use of =~
+# Fixme (and others below):
+#  Check docker "Os" is "linux" [can it be anything else?]
+#    Are there any guarantees of contents, like coreutils?  (It seems not,
+#    and see fixmes around /singularity.)
+#  Maybe accept a docker container instead of an image, and do a pull if
+#    necessary
+#  Options to set $extra and $tarfactor in import.exec (messy because
+#    they're probably specific to the source, and other source types
+#    should be supported)
+#  Convention for singularity container metadata that could be
+#    extracted from docker in this case?
+#  Can it be sped up somehow?  This takes ~1 min with the minimal
+#    fedora image, 45s for busybox, and ~75s with an image of ~1GB.
+#  Treatment of entrypoint/cmd likely still doesn't match docker
+#    properly, in particular "shell" v. "exec", but documentation/stability
+#    lacking for singularity
+#  Consider the locale, e.g. for use of =~, but that probably should be
+#    done generally
 
 # Avoid the set -u horror
 set +u
@@ -97,7 +105,7 @@ op=$(docker inspect --format='{{json .State}}' "$dock" 2>&1)
 case $op in
     Error:*) message ERROR "Docker $op\n"; exit 1;;
     null) :;;
-    *) message ERROR "Docker image required, not container\n"; exit 1;;
+    *) message ERROR "Local Docker image required, not container\n"; exit 1;;
 esac
 
 # We need to have the default entrypoint to run df, and we'd have to
@@ -228,6 +236,7 @@ fi
 
 if ! with_mount "$sing" "test -a /mnt/bin/sh"; then
     # Fixme: Ignore environment and just link to /singularity in this case.
+    # Probably better, have singularity set the container's environment.
     # Alternatively, maybe copy in static busybox?
     message WARNING "No /bin/sh in image: its use will be limited\n"
 elif [[ $cmd != null || $entry != null ]]; then
@@ -248,9 +257,8 @@ EOF
         # extra level of quoting.
         cmd=${cmd//\\/\\\\}     # double \
         cmd=${cmd//\"/\\\"}     # quote "
-        # Fixme: Expansion of $* isn't right
-        # Fixme: Is /bin/sh guaranteed to be there?  It probably needs
-        #        to be for singularity.
+        # Fixme: Expansion of $* isn't really right
+        # Fixme: Is /bin/sh guaranteed to be there?  (As above.)
         cat <<EOF >"$tmp"
 #!/bin/sh
 . /environment
