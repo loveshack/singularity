@@ -75,7 +75,10 @@ docker_cleanup() {
 trap docker_cleanup 0
 
 # Used below for copying into image
-tmp=$(mktemp)
+if ! tmp=$(mktemp); then
+     message ERROR "Running mktemp(1) failed\n"
+     exit 1
+fi
 chmod 0644 "$tmp"
 
 if [[ -z $FILE ]]; then
@@ -240,8 +243,8 @@ if ! with_mount "$sing" "test -a /mnt/bin/sh"; then
     # Alternatively, maybe copy in static busybox?
     message WARNING "No /bin/sh in image: its use will be limited\n"
 elif [[ $cmd != null || $entry != null ]]; then
-    # It's difficult to avoid the tmp file by piping into singularity exec.
-    # Fixme: Use singularity mount, as above, to avoid it?
+    # It's difficult to avoid the tmp file by piping into singularity
+    # exec or mount.
     message 1 "Populating /singularity...\n"
     if [[ $entry = null ]]; then
         # Since the default entrypoint is /bin/sh -c, just inline the
