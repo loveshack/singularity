@@ -7,22 +7,23 @@ if test -z "$prefix" -o "$prefix" = "NONE" ; then
 fi
 AC_SUBST(PREFIX, $prefix)
 
-AC_CANONICAL_TARGET
-case $target_cpu in
-    x86_64)
-        SINGULARITY_ARCH=x86_64
-    ;;
-    i?86)
-        SINGULARITY_ARCH=i386
-    ;;
-    athlon)
-        SINGULARITY_ARCH=i386
-    ;;
-    *)
-        AC_MSG_ERROR([Architecture $target_cpu not supported])
-    ;;
-esac
-AC_SUBST(SINGULARITY_ARCH)
+dnl not currently used
+dnl AC_CANONICAL_TARGET
+dnl case $target_cpu in
+dnl     x86_64)
+dnl         SINGULARITY_ARCH=x86_64
+dnl     ;;
+dnl     i?86)
+dnl         SINGULARITY_ARCH=i386
+dnl     ;;
+dnl     athlon)
+dnl         SINGULARITY_ARCH=i386
+dnl     ;;
+dnl     *)
+dnl         AC_MSG_ERROR([Architecture $target_cpu not supported])
+dnl     ;;
+dnl esac
+dnl AC_SUBST(SINGULARITY_ARCH)
 
 AC_USE_SYSTEM_EXTENSIONS([_GNU_SOURCE])
 AM_INIT_AUTOMAKE([foreign])
