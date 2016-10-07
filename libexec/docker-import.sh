@@ -107,7 +107,8 @@ fi
 op=$(docker inspect --format='{{json .State}}' "$dock" 2>&1)
 case $op in
     Error:*) message ERROR "Docker $op\n"; exit 1;;
-    null) :;;
+    null) :;;                   # seen with v. 1.7
+    *'no entry for key "State"'*) :;; # seen with v. 1.10
     *) message ERROR "Local Docker image required, not container\n"; exit 1;;
 esac
 
