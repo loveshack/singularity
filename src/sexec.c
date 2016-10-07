@@ -224,7 +224,13 @@ int main(int argc, char ** argv) {
     if ( ( sessiondir_prefix = config_get_key_value(config_fp, "sessiondir prefix") ) != NULL ) {
         sessiondir = strjoin(sessiondir_prefix, file_id(containerimage));
     } else {
-        sessiondir = strjoin("/tmp/.singularity-session-", file_id(containerimage));
+        char *tmp = getenv("TMPDIR");
+        char *filepart = strjoin("/.singularity-session-",
+                                 file_id(containerimage));
+        if (!tmp) tmp = "/tmp";
+
+        sessiondir = strjoin(tmp, filepart);
+        free(filepart);
     }
     message(DEBUG, "Set sessiondir to: %s\n", sessiondir);
 
