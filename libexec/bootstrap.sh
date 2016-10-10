@@ -34,6 +34,12 @@ else
     exit 1
 fi
 
+bootstrap_cleanup() {
+    rm -rf "$SINGULARITY_TMPDIR"
+}
+
+trap bootstrap_cleanup 0
+
 singularity_import linux_build
 
 SINGULARITY_BUILDDEF="${1:-}"
@@ -56,5 +62,3 @@ if [ -n "${SINGULARITY_BUILDDEF:-}" -a -f "$SINGULARITY_BUILDDEF" ]; then
 fi
 
 Finalize
-
-rm -rf "$SINGULARITY_TMPDIR"
