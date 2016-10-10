@@ -30,6 +30,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 # The basic technique is:
+#   * Pull the image, if necessary
 #   * Create a docker container from the image
 #   * Estimate the singularity container size from that, and iterate if
 #     the contents don't fit
@@ -39,14 +40,14 @@
 # The structure is partly obscured by error checking and recovery in verbose
 # if blocks in Singularity style; also determining the size and possible
 # /singularity contents is complex.
+
 # Apart from docker, mktemp and awk are required.
 
 # Fixme (and others below):
 #  Check docker "Os" is "linux" [can it be anything else?]
 #    Are there any guarantees of contents, like coreutils?  (It seems not,
 #    and see fixmes around /singularity.)
-#  Maybe accept a docker container instead of an image, and do a pull if
-#    necessary
+#  Maybe accept a docker container instead of an image
 #  Options to set $extra and $tarfactor in import.exec (messy because
 #    they're probably specific to the source, and other source types
 #    should be supported)
@@ -54,6 +55,8 @@
 #    extracted from docker in this case?
 #  Can it be sped up somehow?  This takes ~1 min with the minimal
 #    fedora image, 45s for busybox, and ~75s with an image of ~1GB.
+#    [Actually, this seems to be a function of docker 1.7 running on EL6
+#    -- it's faster in EL7; maybe cut back progress messages.]
 #  Treatment of entrypoint/cmd likely still doesn't match docker
 #    properly, in particular "shell" v. "exec", but documentation/stability
 #    lacking for singularity
@@ -66,7 +69,11 @@ set +u
 docker_cleanup() {
     if [[ -n $id ]]; then
         message 1 "Cleaning up Docker container...\n"
-        sudo docker rm -f $id >/dev/null
+        docker rm -f $id >/dev/null
+    fi
+    if [[ $fetched_image = true ]]; then
+        message 1 "Removing Docker image...\n"
+        docker rmi -f "$dock" >& /dev/null
     fi
     rm -f "$tmp"
 }
@@ -104,13 +111,17 @@ if ! docker version >/dev/null; then
     exit 1
 fi
 
-op=$(docker inspect --format='{{json .State}}' "$dock" 2>&1)
-case $op in
-    Error:*) message ERROR "Docker $op\n"; exit 1;;
-    null) :;;                   # seen with v. 1.7
-    *'no entry for key "State"'*) :;; # seen with v. 1.10
-    *) message ERROR "Local Docker image required, not container\n"; exit 1;;
-esac
+message 1 "Patience...\n"
+
+# Check whether we already have the image (with the right tag, if given)
+if ! docker images | tail -n +2 | egrep -q "^${dock/:/\\s+}\s"; then
+    fetched_image=true          # for cleanup
+    message 1 "Pulling image...\n"
+    if ! op=$(docker pull "$dock"); then
+        message ERROR "$op\n"
+        exit 1
+    fi
+fi
 
 # We need to have the default entrypoint to run df, and we'd have to
 # generate /singularity differently with a non-default one.
@@ -133,7 +144,7 @@ fi
 # surprisingly) than the tar stream.  Also the two containers may use
 # different filesystem types, which will affect their relative sizes.
 
-message 1 "Patience...\nCreating Docker container...\n"
+message 1 "Creating Docker container...\n"
 if ! id=$(docker create "$dock" df -k -P /); then
     message ERROR "docker create failed\n"
     exit 1

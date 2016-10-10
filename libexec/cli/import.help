@@ -39,8 +39,8 @@ EXAMPLES:
     $ sudo singularity import -f Debian.tar /tmp/Debian.img
     $ docker export [container] | sudo singularity import [container].img
 
-    Converting a locally-available Docker Fedora image (assuming a
-    running Docker daemon):
+    Converting a Docker Fedora image (assuming a running Docker
+    daemon); the image is pulled if it is not locally-available:
 
     $ sudo singularity import -t docker -f fedora /tmp/fedora.img
 
