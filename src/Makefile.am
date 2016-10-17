@@ -20,9 +20,9 @@ bindir = $(libexecdir)/singularity
 bin_PROGRAMS = sexec image-create image-expand image-mount image-bind
 
 sexec_SOURCES = sexec.c util.c loop-control.c mounts.c container_files.c file.c image.c config_parser.c container_actions.c privilege.c message.c
-image_create_SOURCES = image-create.c file.c util.c image.c message.c
-image_expand_SOURCES = image-expand.c file.c util.c image.c message.c
-image_mount_SOURCES = image-mount.c util.c loop-control.c mounts.c file.c image.c message.c
-image_bind_SOURCES = image-bind.c util.c loop-control.c mounts.c file.c image.c message.c
+image_create_SOURCES = image-create.c file.c util.c image.c message.c privilege.c
+image_expand_SOURCES = image-expand.c file.c util.c image.c message.c privilege.c
+image_mount_SOURCES = image-mount.c util.c loop-control.c mounts.c file.c image.c message.c privilege.c
+image_bind_SOURCES = image-bind.c util.c loop-control.c mounts.c file.c image.c message.c privilege.c
 
 EXTRA_DIST = config.h config_parser.h container_actions.h file.h image.h loop-control.h mounts.h container_files.h util.h privilege.h message.h

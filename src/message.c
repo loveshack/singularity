@@ -31,6 +31,7 @@
 #include "config.h"
 #include "util.h"
 #include "message.h"
+#include "privilege.h"
 
 static int messagelevel = -1;
 
@@ -68,6 +69,16 @@ void _message(int level, const char *function, const char *file, int line, char 
     char message[512]; // Flawfinder: ignore (messages are truncated to 512 chars)
     char *prefix = "";
     va_list args;
+    static unsigned recur = 0;
+    struct s_privinfo uinfo;
+    int privileged = geteuid() == 0;
+
+    /* Recursive calls via the privilege-dropping below could cause
+     * trouble with error conditions.  The best we can do is to avoid
+     * recursive messages.  */
+    if (recur > 0) return;
+    recur++;
+
     va_start (args, format);
 
     vsnprintf(message, 512, format, args); // Flawfinder: ignore (format is internally defined)
@@ -125,6 +136,19 @@ void _message(int level, const char *function, const char *file, int line, char 
             snprintf(header_string, sizeof header_string, "%-7s: ", prefix); // Flawfinder: ignore
         }
 
+        /* Don't print messages when privileged.  They may have
+         * user-controlled contents from arguments or the environment,
+         * with the possibility of injecting input via terminal
+         * control sequences to which the terminal responds with an
+         * escape sequence.  Cleaning escape characters as an
+         * alternative might fall foul of iso-2022 etc. in the absence
+         * of m17n support.  */
+        if (privileged) {
+            if (get_user_privs(&uinfo) < 0 || drop_privs(&uinfo) < 0) {
+                ABORT(255);
+            }
+        }
+
         if ( level == INFO && messagelevel == INFO ) {
             printf("%s", message);
         } else if ( level == INFO ) {
@@ -135,12 +159,14 @@ void _message(int level, const char *function, const char *file, int line, char 
             fprintf(stderr, "%s%s", header_string, message);
         }
 
-
+        if (privileged && escalate_privs() < 0) {
+            ABORT(255);
+        }
         fflush(stdout);
         fflush(stderr);
 
     }
-
+    recur--;
 }
 
 void singularity_abort(int retval) {
