@@ -91,28 +91,28 @@ void _message(int level, const char *function, const char *file, int line, char 
 
     switch (level) {
         case ABRT:
-            prefix = xstrdup("ABORT");
+            prefix = "ABORT";
             syslog_level = LOG_ALERT;
             break;
         case ERROR:
-            prefix = xstrdup("ERROR");
+            prefix = "ERROR";
             syslog_level = LOG_ERR;
             break;
         case  WARNING:
-            prefix = xstrdup("WARNING");
+            prefix = "WARNING";
             syslog_level = LOG_WARNING;
             break;
         case LOG:
-            prefix = xstrdup("LOG");
+            prefix = "LOG";
             break;
         case DEBUG:
-            prefix = xstrdup("DEBUG");
+            prefix = "DEBUG";
             break;
         case INFO:
-            prefix = xstrdup("INFO");
+            prefix = "INFO";
             break;
         default:
-            prefix = xstrdup("VERBOSE");
+            prefix = "VERBOSE";
             break;
     }
 
