@@ -21,6 +21,6 @@
 
 # Simple wrapper for 'singularity run'
 
-exec /usr/bin/env singularity --quiet run "$@"
+exec singularity --quiet run "$@"
 
 exit 255
