@@ -56,7 +56,7 @@
 #endif
 
 #ifndef LOCALSTATEDIR
-#define LOCALSTATEDIR "/etc"
+#define LOCALSTATEDIR "/var"
 #endif
 
 #ifndef SYSCONFDIR
@@ -245,7 +245,7 @@ int main(int argc, char ** argv) {
     rewind(config_fp);
     if ( ( containerdir = config_get_key_value(config_fp, "container dir") ) == NULL ) {
         //containerdir = (char *) malloc(21);
-        containerdir = xstrdup("/var/singularity/mnt");
+        containerdir = xstrdup(LOCALSTATEDIR "/run/singularity/mnt");
     }
     message(DEBUG, "Set image mount path to: %s\n", containerdir);
 
