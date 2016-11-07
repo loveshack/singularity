@@ -84,6 +84,51 @@ void sighandler(int sig) {
 }
 
 
+void handle_bind(char *key, FILE *config_fp, char *homedir_base,
+                 char *containerdir, char *containername) {
+    char *tmp_config_string;
+    int maybe = !strcmp(key, "bind path maybe");
+
+    rewind(config_fp);
+    while ( ( tmp_config_string = config_get_key_value(config_fp, key) ) != NULL ) {
+        char *source = strtok(tmp_config_string, ",");
+        char *dest = strtok(NULL, ",");
+        chomp(source);
+        if ( dest == NULL ) {
+            dest = xstrdup(source);
+        } else {
+            if ( dest[0] == ' ' ) {
+                dest++;
+            }
+            chomp(dest);
+        }
+
+        message(VERBOSE2, "Found '%s' = %s, %s\n", key, source, dest);
+
+        if ( ( homedir_base != NULL ) && ( strncmp(dest, homedir_base, strlen(homedir_base)) == 0 )) {
+            // Skipping path as it was already mounted as homedir_base
+            message(VERBOSE2, "Skipping '%s' as it is part of home path and already mounted\n", dest);
+            continue;
+        }
+
+        if ( ( is_file(source) != 0 ) && ( is_dir(source) != 0 ) ) {
+            message(maybe ? INFO : WARNING,
+                    "Non existent '%s' source: '%s'\n", key, source);
+            continue;
+        }
+        if ( ( is_file(joinpath(containerdir, dest)) != 0 )
+             && ( is_dir(joinpath(containerdir, dest)) != 0 ) ) {
+            message(maybe ? INFO : WARNING,
+                    "Non existent '%s' in container: '%s'\n", key, dest);
+            continue;
+        }
+
+        message(VERBOSE, "Binding '%s' to '%s:%s'\n", source, containername, dest);
+        if ( mount_bind(source, joinpath(containerdir, dest), 1) < 0 ) {
+            ABORT(255);
+        }
+    }
+}
 
 int main(int argc, char ** argv) {
     FILE *loop_fp = NULL;
@@ -102,7 +147,6 @@ int main(int argc, char ** argv) {
     char *homedir_base = 0;
     char *loop_dev = 0;
     char *config_path;
-    char *tmp_config_string;
     char setns_dir[128+9]; // Flawfinder: ignore
     char cwd[PATH_MAX]; // Flawfinder: ignore
     int cwd_fd;
@@ -586,42 +630,10 @@ int main(int argc, char ** argv) {
                 }
 
                 message(DEBUG, "Checking configuration file for 'bind path'\n");
-                rewind(config_fp);
-                while ( ( tmp_config_string = config_get_key_value(config_fp, "bind path") ) != NULL ) {
-                    char *source = strtok(tmp_config_string, ",");
-                    char *dest = strtok(NULL, ",");
-                    chomp(source);
-                    if ( dest == NULL ) {
-                        dest = xstrdup(source);
-                    } else {
-                        if ( dest[0] == ' ' ) {
-                            dest++;
-                        }
-                        chomp(dest);
-                    }
-
-                    message(VERBOSE2, "Found 'bind path' = %s, %s\n", source, dest);
-
-                    if ( ( homedir_base != NULL ) && ( strncmp(dest, homedir_base, strlen(homedir_base)) == 0 )) {
-                        // Skipping path as it was already mounted as homedir_base
-                        message(VERBOSE2, "Skipping '%s' as it is part of home path and already mounted\n", dest);
-                        continue;
-                    }
-
-                    if ( ( is_file(source) != 0 ) && ( is_dir(source) != 0 ) ) {
-                        message(WARNING, "Non existent 'bind path' source: '%s'\n", source);
-                        continue;
-                    }
-                    if ( ( is_file(joinpath(containerdir, dest)) != 0 ) && ( is_dir(joinpath(containerdir, dest)) != 0 ) ) {
-                        message(WARNING, "Non existent 'bind point' in container: '%s'\n", dest);
-                        continue;
-                    }
-
-                    message(VERBOSE, "Binding '%s' to '%s:%s'\n", source, containername, dest);
-                    if ( mount_bind(source, joinpath(containerdir, dest), 1) < 0 ) {
-                        ABORT(255);
-                    }
-                }
+                handle_bind("bind path", config_fp, homedir_base,
+                            containerdir, containername);
+                handle_bind("bind path maybe", config_fp, homedir_base,
+                            containerdir, containername);
             }
 
 
