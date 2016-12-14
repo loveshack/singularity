@@ -112,13 +112,13 @@ void handle_bind(char *key, FILE *config_fp, char *homedir_base,
         }
 
         if ( ( is_file(source) != 0 ) && ( is_dir(source) != 0 ) ) {
-            message(maybe ? INFO : WARNING,
+            message(maybe ? DEBUG : WARNING,
                     "Non existent '%s' source: '%s'\n", key, source);
             continue;
         }
         if ( ( is_file(joinpath(containerdir, dest)) != 0 )
              && ( is_dir(joinpath(containerdir, dest)) != 0 ) ) {
-            message(maybe ? INFO : WARNING,
+            message(maybe ? DEBUG : WARNING,
                     "Non existent '%s' in container: '%s'\n", key, dest);
             continue;
         }
