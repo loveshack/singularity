@@ -20,10 +20,10 @@
 # 
 
 
-prefix="@prefix@"
+prefix=${prefix:-@prefix@}
 exec_prefix="@exec_prefix@"
 libexecdir="@libexecdir@"
-sysconfdir="@sysconfdir@"
+sysconfdir=${sysconfdir:-@sysconfdir@}
 localstatedir="@localstatedir@"
 bindir="@bindir@"
 
@@ -56,7 +56,6 @@ if [ ! -f "$SINGULARITY_sysconfdir/singularity/singularity.conf" ]; then
 fi
 
 if [ -z "$CLEAN_SHELL" ]; then
-    /bin/echo "Building/Installing Singularity to temporary directory"
     /bin/echo "Reinvoking in a clean shell"
     sleep 1
     exec env -i CLEAN_SHELL=1 PATH="$SINGULARITY_PATH:/bin:/usr/bin:/sbin:/usr/sbin" bash "$0" "$@"
