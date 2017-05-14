@@ -224,9 +224,11 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 
 AC_ARG_WITH([userns],
             AS_HELP_STRING([--with-userns], [Enable use of user namespaces]),
-            [SINGULARITY_DEFINES="$SINGULARITY_DEFINES -DSINGULARITY_USERNS"]
+            [SINGULARITY_DEFINES="$SINGULARITY_DEFINES -DSINGULARITY_USERNS"
+             USERNS=true],
+            [USERNS=false]
            )
-
+AC_SUBST(USERNS)
 
 AC_CHECK_FUNCS(setns, [
                       ], [
