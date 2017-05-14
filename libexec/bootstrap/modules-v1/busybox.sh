@@ -46,6 +46,9 @@ fi
 
 
 Bootstrap() {
+    local silent=''
+    [[ $MESSAGELEVEL =0 ]] && silent=-s
+     ]
     mkdir -p -m 0755 "$SINGULARITY_ROOTFS/bin"
     mkdir -p -m 0755 "$SINGULARITY_ROOTFS/etc"
 
@@ -53,7 +56,7 @@ Bootstrap() {
     echo " root:x:0:" > "$SINGULARITY_ROOTFS/etc/group"
     echo "127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4" > "$SINGULARITY_ROOTFS/etc/hosts"
 
-    "$CURL" "$MIRROR" > "$SINGULARITY_ROOTFS/bin/busybox"
+    "$CURL" $silent "$MIRROR" > "$SINGULARITY_ROOTFS/bin/busybox"
 
     chmod 0755 "$SINGULARITY_ROOTFS/bin/busybox"
 
