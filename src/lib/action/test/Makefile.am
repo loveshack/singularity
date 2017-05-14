@@ -4,7 +4,7 @@ CLEANFILES = core.* *~ *.la
 
 AM_CFLAGS = -Wall -fpie
 AM_LDFLAGS = -pie
-AM_CPPFLAGS = -DSYSCONFDIR=\"$(sysconfdir)\" -DLOCALSTATEDIR=\"$(localstatedir)\" -DLIBEXECDIR=\"$(libtestdir)\" $(SINGULARITY_DEFINES) $(NO_SETNS)
+AM_CPPFLAGS = -DSYSCONFDIR=\"$(sysconfdir)\" -DLOCALSTATEDIR=\"$(localstatedir)\" -DLIBEXECDIR=\"$(libtestdir)\" $(SINGULARITY_DEFINES) $(NO_SETNS) -I$(top_srcdir)/src
 
 noinst_LTLIBRARIES = libactiontest.la
 libactiontest_la_SOURCES = test.c
