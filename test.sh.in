@@ -112,10 +112,10 @@ stest 1 singularity bogus help
 /bin/echo
 /bin/echo "Building test container..."
 
-stest 0 sudo singularity create -s 568 "$CONTAINER"
+stest 0 sudo -E singularity create -s 568 "$CONTAINER"
 # We will need a setuid binary (ping) for the NO_NEW_PRIVS test below.
 stest 0 sed -i "$STARTDIR/examples/centos.def" -e 's|#InstallPkgs yum vim-minimal|InstallPkgs iputils|'
-stest 0 sudo singularity bootstrap "$CONTAINER" "$STARTDIR/examples/busybox.def"
+stest 0 sudo -E singularity bootstrap "$CONTAINER" "$STARTDIR/examples/busybox.def"
 
 /bin/echo
 /bin/echo "Running container shell tests..."
@@ -145,9 +145,9 @@ stest 0 singularity run "$CONTAINER" -c true
 stest 1 singularity run "$CONTAINER" -c false
 echo -ne "#!/bin/sh\n\neval \"\$@\"\n" > singularity
 stest 0 chmod 0644 singularity
-stest 0 sudo singularity copy "$CONTAINER" -a singularity /
+stest 0 sudo -E singularity copy "$CONTAINER" -a singularity /
 stest 1 singularity run "$CONTAINER" true
-stest 0 sudo singularity exec -w "$CONTAINER" chmod 0755 /singularity
+stest 0 sudo -E singularity exec -w "$CONTAINER" chmod 0755 /singularity
 stest 0 singularity run "$CONTAINER" true
 stest 1 singularity run "$CONTAINER" false
 
@@ -157,32 +157,32 @@ stest 1 singularity run "$CONTAINER" false
 
 stest 0 sudo chown root.root "$CONTAINER"
 stest 0 sudo chmod 0644 "$CONTAINER"
-stest 0 sudo singularity shell -w "$CONTAINER" -c true
-stest 0 sudo singularity exec -w "$CONTAINER" true
-stest 0 sudo singularity run -w "$CONTAINER" true
+stest 0 sudo -E singularity shell -w "$CONTAINER" -c true
+stest 0 sudo -E singularity exec -w "$CONTAINER" true
+stest 0 sudo -E singularity run -w "$CONTAINER" true
 stest 1 singularity shell -w "$CONTAINER" -c true
 stest 1 singularity exec -w "$CONTAINER" true
 stest 1 singularity run -w "$CONTAINER" true
 stest 0 sudo chmod 0666 "$CONTAINER"
-stest 0 sudo singularity shell -w "$CONTAINER" -c true
-stest 0 sudo singularity exec -w "$CONTAINER" true
-stest 0 sudo singularity run -w "$CONTAINER" true
+stest 0 sudo -E singularity shell -w "$CONTAINER" -c true
+stest 0 sudo -E singularity exec -w "$CONTAINER" true
+stest 0 sudo -E singularity run -w "$CONTAINER" true
 stest 0 singularity shell -w "$CONTAINER" -c true
 stest 0 singularity exec -w "$CONTAINER" true
 stest 0 singularity run -w "$CONTAINER" true
 stest 1 singularity exec "$CONTAINER" touch /writetest.fail
 #stest 0 sudo singularity exec "$CONTAINER" touch /writetest.fail #### This works thanks to the overlayfs now, maybe it should be conditional here?
-stest 0 sudo singularity exec -w "$CONTAINER" touch /writetest.pass
+stest 0 sudo -E singularity exec -w "$CONTAINER" touch /writetest.pass
 
 
 /bin/echo
 /bin/echo "Checking Bootstrap on existing container..."
 
-stest 0 sudo singularity bootstrap "$CONTAINER"
+stest 0 sudo -E singularity bootstrap "$CONTAINER"
 stest 0 singularity exec "$CONTAINER" test -f /environment
-stest 0 sudo singularity exec -w "$CONTAINER" rm /environment
+stest 0 sudo -E singularity exec -w "$CONTAINER" rm /environment
 stest 1 singularity exec "$CONTAINER" test -f /environment
-stest 0 sudo singularity bootstrap "$CONTAINER"
+stest 0 sudo -E singularity bootstrap "$CONTAINER"
 stest 0 singularity exec "$CONTAINER" test -f /environment
 stest 0 singularity exec "$CONTAINER" test -f /.shell
 stest 0 singularity exec "$CONTAINER" test -f /.exec
@@ -202,13 +202,13 @@ stest 0 singularity exec "$CONTAINER" true
 /bin/echo
 /bin/echo "Checking export/import..."
 
-stest 0 sudo singularity export -f ${CONTAINERDIR}.tar "$CONTAINER"
+stest 0 sudo -E singularity export -f ${CONTAINERDIR}.tar "$CONTAINER"
 stest 0 mkdir $CONTAINERDIR
 stest 0 sudo tar -C $CONTAINERDIR -xvf ${CONTAINERDIR}.tar
 stest 0 sudo chmod 0644 ${CONTAINERDIR}.tar
 stest 0 sudo rm -f "$CONTAINER"
-stest 0 sudo singularity create -s 568 "$CONTAINER"
-stest 0 sh -c "cat ${CONTAINERDIR}.tar | sudo singularity import $CONTAINER"
+stest 0 sudo -E singularity create -s 568 "$CONTAINER"
+stest 0 sh -c "cat ${CONTAINERDIR}.tar | sudo -E singularity import $CONTAINER"
 
 
 /bin/echo
@@ -226,7 +226,7 @@ stest 1 singularity exec $CONTAINERDIR ping localhost -c 1
 
 /bin/echo
 /bin/echo "Checking target UID mode"
-stest 0 sh -c "sudo SINGULARITY_TARGET_GID=`id -g` SINGULARITY_TARGET_UID=`id -u` singularity exec $CONTAINER whoami | grep -q `id -un`"
+stest 0 sh -c "sudo -E SINGULARITY_TARGET_GID=`id -g` SINGULARITY_TARGET_UID=`id -u` singularity exec $CONTAINER whoami | grep -q `id -un`"
 
  
 if @USERNS@; then
