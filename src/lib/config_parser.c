@@ -76,6 +76,7 @@ char *singularity_config_get_value(char *key) {
 
     singularity_message(DEBUG, "Called singularity_config_get_value(%s)\n", key);
 
+    errno = 0;
     while ( fgets(line, MAX_LINE_LEN, config_fp) ) {
         if ( ( config_key = strtok(line, "=") ) != NULL ) {
             chomp(config_key);
@@ -87,6 +88,10 @@ char *singularity_config_get_value(char *key) {
                 }
             }
         }
+    }
+    if ( errno != 0 ) {
+        singularity_message(ERROR, "Reading config file failed: %s\n", strerror(errno));
+        ABORT(255);
     }
 
     singularity_message(DEBUG, "No configuration file entry found for '%s'\n", key);
