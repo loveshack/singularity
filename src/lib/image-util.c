@@ -102,9 +102,13 @@ int singularity_image_offset(FILE *image_fp) {
 
 int singularity_image_create(char *image, int size) {
     FILE *image_fp;
-    char *buff = (char *) xmalloc(1024*1024);
+    char *buff = calloc(1024*1024, 1);
     int i;
 
+    if (!buff) {
+        fprintf(stderr, "ABORT: Can't allocate memory\n");
+        abort();
+    }
     singularity_message(VERBOSE, "Creating new sparse image at: %s\n", image);
 
     if ( is_file(image) == 0 ) {
