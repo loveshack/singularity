@@ -42,7 +42,7 @@
 
 void singularity_mount_cwd(void) {
     char *container_dir = singularity_rootfs_dir();
-    char *cwd_path = (char *) xmalloc(PATH_MAX);
+    char cwd_path[PATH_MAX];
     int r;
 
     singularity_message(DEBUG, "Checking to see if we should mount current working directory\n");

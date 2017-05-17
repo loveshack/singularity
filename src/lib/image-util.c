@@ -115,6 +115,7 @@ int singularity_image_create(char *image, int size) {
     singularity_message(DEBUG, "Opening image 'w'\n");
     if ( ( image_fp = fopen(image, "w") ) == NULL ) { // Flawfinder: ignore
         fprintf(stderr, "ERROR: Could not open image for writing %s: %s\n", image, strerror(errno));
+        free(buff);
         return(-1);
     }
 
@@ -129,6 +130,7 @@ int singularity_image_create(char *image, int size) {
         }
     }
 
+    free(buff);
     singularity_message(VERBOSE2, "Making image executable\n");
     fchmod(fileno(image_fp), 0755);
 
@@ -150,6 +152,7 @@ int singularity_image_expand(char *image, int size) {
     singularity_message(DEBUG, "Opening image 'r+'\n");
     if ( ( image_fp = fopen(image, "r+") ) == NULL ) { // Flawfinder: ignore
         fprintf(stderr, "ERROR: Could not open image for writing %s: %s\n", image, strerror(errno));
+        free(buff);
         return(-1);
     }
 
@@ -160,6 +163,7 @@ int singularity_image_expand(char *image, int size) {
     singularity_message(DEBUG, "Removing the footer from image\n");
     if ( ftruncate(fileno(image_fp), position-1) < 0 ) {
         fprintf(stderr, "ERROR: Failed truncating the marker bit off of image %s: %s\n", image, strerror(errno));
+        free(buff);
         return(-1);
     }
     singularity_message(VERBOSE2, "Expanding image by %dMB\n", size);
@@ -169,6 +173,7 @@ int singularity_image_expand(char *image, int size) {
             ABORT(255);
         }
     }
+    free(buff);
     fprintf(image_fp, "0");
     fclose(image_fp);
 

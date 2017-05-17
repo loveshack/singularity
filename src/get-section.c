@@ -42,7 +42,7 @@ int main(int argc, char ** argv) {
     char *file;
     int toggle_retval = 1;
     FILE *input;
-    char *line = (char *)xmalloc(MAX_LINE_LEN);;
+    char line[MAX_LINE_LEN];
 
     if ( argc < 2 ) {
         printf("USAGE: %s [section] [file]\n", argv[0]);

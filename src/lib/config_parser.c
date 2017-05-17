@@ -67,14 +67,12 @@ void singularity_config_rewind(void) {
 char *singularity_config_get_value(char *key) {
     char *config_key;
     char *config_value;
-    char *line;
+    char line[MAX_LINE_LEN];
 
     if ( config_fp == NULL ) {
         singularity_message(ERROR, "Called singularity_config_get_value() before opening a config!\n");
         ABORT(255);
     }
-
-    line = (char *)xmalloc(MAX_LINE_LEN);
 
     singularity_message(DEBUG, "Called singularity_config_get_value(%s)\n", key);
 
@@ -90,7 +88,6 @@ char *singularity_config_get_value(char *key) {
             }
         }
     }
-    free(line);
 
     singularity_message(DEBUG, "No configuration file entry found for '%s'\n", key);
     return(NULL);

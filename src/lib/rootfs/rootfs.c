@@ -221,6 +221,7 @@ int singularity_rootfs_mount(void) {
 
         overlay_enabled = 1;
     }
+    free(overlay_options);
 
 #endif /* SINGULARITY_OVERLAYFS */
 
