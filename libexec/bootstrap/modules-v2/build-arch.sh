@@ -78,7 +78,6 @@ BASE_TO_INST=`pacman -Sgq base | grep -xv $BASE_TO_SKIP | tr '\n' ' '`
 # https://wiki.archlinux.org/index.php/Mirrors#List_by_speed
 
 PACMAN_CONF=$(mktemp --tmpdir "pacman.conf.XXXX")
-# TODO: Use mktemp instead?
 if ! eval "'$WGET' --no-verbose -O '$PACMAN_CONF' '$PACMAN_CONF_URL'"; then
     message ERROR "Failed to download \`$PACMAN_CONF_URL' to \`$PACMAN_CONF'.\n"
     ABORT 255

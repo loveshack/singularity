@@ -37,18 +37,12 @@
 #include "lib/ns/ns.h"
 #include "../mount-util.h"
 
-int singularity_mount_binds(void) {
+void handle_bind(char *key, char *container_dir) {
     char *tmp_config_string;
-    char *container_dir = singularity_rootfs_dir();
+    int maybe = !strcmp(key, "bind path maybe");
 
-    if ( envar_defined("SINGULARITY_CONTAIN") == TRUE ) {
-        singularity_message(DEBUG, "Skipping bind mounts as contain was requested\n");
-        return(0);
-    }
-
-    singularity_message(DEBUG, "Checking configuration file for 'bind path'\n");
     singularity_config_rewind();
-    while ( ( tmp_config_string = singularity_config_get_value("bind path") ) != NULL ) {
+    while ( ( tmp_config_string = singularity_config_get_value(key) ) != NULL ) {
         char *source = strtok(tmp_config_string, ":");
         char *dest = strtok(NULL, ":");
         chomp(source);
@@ -58,10 +52,10 @@ int singularity_mount_binds(void) {
             chomp(dest);
         }
 
-        singularity_message(VERBOSE2, "Found 'bind path' = %s, %s\n", source, dest);
+        singularity_message(VERBOSE2, "Found '%s' = %s, %s\n", key, source, dest);
 
         if ( ( is_file(source) < 0 ) && ( is_dir(source) < 0 ) ) {
-            singularity_message(WARNING, "Non existent 'bind path' source: '%s'\n", source);
+            singularity_message(maybe ? DEBUG : WARNING, "Non existent 'bind path' source: '%s'\n", source);
             continue;
         }
 
@@ -87,7 +81,7 @@ int singularity_mount_binds(void) {
                 }
                 singularity_message(DEBUG, "Created bind file: %s\n", dest);
             } else {
-                singularity_message(WARNING, "Non existent bind point (file) in container: '%s'\n", dest);
+                singularity_message(maybe ? DEBUG : WARNING, "Non existent bind point (file) in container: '%s'\n", dest);
                 continue;
             }
         } else if ( ( is_dir(source) == 0 ) && ( is_dir(joinpath(container_dir, dest)) < 0 ) ) {
@@ -101,7 +95,7 @@ int singularity_mount_binds(void) {
                 }
                 singularity_priv_drop();
             } else {
-                singularity_message(WARNING, "Non existent bind point (directory) in container: '%s'\n", dest);
+                singularity_message(maybe ? DEBUG : WARNING, "Non existent bind point (directory) in container: '%s'\n", dest);
                 continue;
             }
         }
@@ -114,6 +108,58 @@ int singularity_mount_binds(void) {
         }
         singularity_priv_drop();
     }
+    /* rewind(config_fp); */
+    /* while ( ( tmp_config_string = config_get_key_value(config_fp, key) ) != NULL ) { */
+    /*     char *source = strtok(tmp_config_string, ","); */
+    /*     char *dest = strtok(NULL, ","); */
+    /*     chomp(source); */
+    /*     if ( dest == NULL ) { */
+    /*         dest = xstrdup(source); */
+    /*     } else { */
+    /*         if ( dest[0] == ' ' ) { */
+    /*             dest++; */
+    /*         } */
+    /*         chomp(dest); */
+    /*     } */
+
+    /*     message(VERBOSE2, "Found '%s' = %s, %s\n", key, source, dest); */
+
+    /*     if ( ( homedir_base != NULL ) && ( strncmp(dest, homedir_base, strlen(homedir_base)) == 0 )) { */
+    /*         // Skipping path as it was already mounted as homedir_base */
+    /*         message(VERBOSE2, "Skipping '%s' as it is part of home path and already mounted\n", dest); */
+    /*         continue; */
+    /*     } */
+
+    /*     if ( ( is_file(source) != 0 ) && ( is_dir(source) != 0 ) ) { */
+    /*         message(maybe ? INFO : WARNING, */
+    /*                 "Non existent '%s' source: '%s'\n", key, source); */
+    /*         continue; */
+    /*     } */
+    /*     if ( ( is_file(joinpath(containerdir, dest)) != 0 ) */
+    /*          && ( is_dir(joinpath(containerdir, dest)) != 0 ) ) { */
+    /*         message(maybe ? INFO : WARNING, */
+    /*                 "Non existent '%s' in container: '%s'\n", key, dest); */
+    /*         continue; */
+    /*     } */
+
+    /*     message(VERBOSE, "Binding '%s' to '%s:%s'\n", source, containername, dest); */
+    /*     if ( mount_bind(source, joinpath(containerdir, dest), 1) < 0 ) { */
+    /*         ABORT(255); */
+    /*     } */
+    /* } */
+}
+ 
+int singularity_mount_binds(void) {
+    char *container_dir = singularity_rootfs_dir();
+
+    if ( envar_defined("SINGULARITY_CONTAIN") == TRUE ) {
+        singularity_message(DEBUG, "Skipping bind mounts as contain was requested\n");
+        return(0);
+    }
+
+    singularity_message(DEBUG, "Checking configuration file for 'bind path'\n");
+    handle_bind("bind path", container_dir);
+    handle_bind("bind path maybe", container_dir);
 
     return(0);
 }
