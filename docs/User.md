@@ -35,7 +35,7 @@ Scientists are a resourceful bunch and many of the features which exist both pur
 
 	The goal of Singularity is to support existing and traditional HPC resources as easily as installing a single package onto the host operating system. Some configuration maybe required via a single configuration file, but the defaults are tuned to be generally applicable for shared environments.
 
-	Singularity can run on host Linux distributions from RHEL6 (RHEL5 for versions lower then 2.2) and similar vintages, and the contained images have been tested as far back as Linux 2.2 (approximately 14 years old). Singularity natively supports IniniBand, Lustre, and works seamlessly with all resource managers (e.g. SLURM, Torque, SGE, etc.) because it works like running any other command on the system.
+	Singularity can run on host Linux distributions from RHEL6 (RHEL5 for versions lower then 2.2) and similar vintages, and the contained images have been tested as far back as Linux 2.2 (approximately 14 years old). Singularity natively supports Infiniband, Lustre, and works seamlessly with all resource managers (e.g. SLURM, Torque, SGE, etc.) because it works like running any other command on the system.
 
 
 ## A High Level View of Singularity
@@ -94,7 +94,7 @@ So considering that, and considering that the user inside the container is the s
 
 Or in summary, Singularity allows us to virtually swap out the underlying operating system for one that we defined without affecting anything else on the system and still having all of the host resources available to us.
 
-It can also be described as ssh'ing into another identical host running a different operating system. One moment you are on Centos-6 and the next minute you are on the latest version of Ubuntu that has Tensorflow installed, or Debian with the latest OpenFoam, or a custom workflow that you installed.
+It can also be described as ssh'ing into another identical host running a different operating system. One moment you are on CentOS-6 and the next minute you are on the latest version of Ubuntu that has Tensorflow installed, or Debian with the latest OpenFoam, or a custom workflow that you installed.
 
 Additionally what name-spaces are selected for virtualization can be dynamic or conditional. For example, the PID namespace is not separated from the host by default, but if you want to separate it, you can with a command line (or environment variable) setting. You can also decide you want to contain a process so it can not reach out to the host file system if you don't know if you trust the image. But by default, you are allowed to interface with all of the resources, devices and network inside the container as you are outside the container.
 
@@ -214,8 +214,8 @@ $ singularity -v exec container.img foo -v
 The take home message here is that option placement is exceedingly important. The algorithm that Singularity uses for option parsing for both global options as well as subcommand options is as follows:
 
 1. Read in the current option name
-2. If the option is recognized do what is needed, move to next option (goto #1)
-3. If the paramater is prefixed with a `-` (hyphen) but is not recognized, error out
+2. If the option is recognized do what is needed, move to next option (go to #1)
+3. If the parameter is prefixed with a `-` (hyphen) but is not recognized, error out
 4. If the next option is not prefixed with a `-` (hyphen), then assume we are done with option parsing
 
 This means that options will continue to be parsed until no more options are listed.
@@ -267,7 +267,7 @@ Singularity.ubuntu:latest> exit
 [gmk@centos7-x64 ~]$
 ```
 
-In this example, you can see we started off on a Centos-7.2 host operating system, ran Singularity as a non-root user and used a URI which tells Singularity to pull a given container from the main Docker Registry and execute a shell within it. In this example, we are not telling Singularity to use a local image, which means that any changes we make will be non-persistent (e.g. the container is removed automatically as soon as the shell is exited).
+In this example, you can see we started off on a CentOS-7.2 host operating system, ran Singularity as a non-root user and used a URI which tells Singularity to pull a given container from the main Docker Registry and execute a shell within it. In this example, we are not telling Singularity to use a local image, which means that any changes we make will be non-persistent (e.g. the container is removed automatically as soon as the shell is exited).
 
 You may select other images that are currently hosted on the main Docker Hub Library.
 
@@ -312,17 +312,17 @@ There are multiple sections of the Singularity bootstrap definition file:
 #### Bootstrap:
 The `Bootstrap: ` keyword identifies the Singularity module that will be used for building the core components of the operating system. There are several supported modules at the time of this writing:
 
-1. **yum**: The YUM bootstrap module uses YUM on the host system to bootstrap the core operating system that exists within the container. This module is applicable for bootstrapping distributions like Red Hat, Centos, and Scientific Linux. When using the `yum` bootstrap module, several other keywords may also be necessary to define:
+1. **yum**: The YUM bootstrap module uses YUM on the host system to bootstrap the core operating system that exists within the container. This module is applicable for bootstrapping distributions like Red Hat, CentOS, and Scientific Linux. When using the `yum` bootstrap module, several other keywords may also be necessary to define:
 
-    - **MirrorURL**: This is the location where the packages will be downloaded from. When bootstrapping different RHEL/YUM compatible distributions of Linux, this will define which variant will be used (e.g. the only difference in bootstrapping Centos from Scientific Linux is this line.
+    - **MirrorURL**: This is the location where the packages will be downloaded from. When bootstrapping different RHEL/YUM compatible distributions of Linux, this will define which variant will be used (e.g. the only difference in bootstrapping CentOS from Scientific Linux is this line.
     - **OSVersion**: When using the `yum` bootstrap module, this keyword is conditional and required only if you have specified a %{OSVERSION} variable name in the `MirrorURL` keyword. If the `MirrorURL` definition does not have the %{OSVERSION} variable, `OSVersion` can be omitted from the header field.
     - **Include**: By default the core operating system is an extremely minimal base, which may or may not include the means to even install additional packages. The `Include` keyword should define any additional packages which should be used and installed as part of the core operating system bootstrap. The best practice is to keep this keyword usage as minimal as possible such that you can then use the `%inside` scriptlet (explained shortly) to do additional installations. One common package you may want to include here is `yum` itself.
 
-    Warning, there is a major limitation with using YUM to bootstrap a container and that is the RPM database that exists within the container will be created using the RPM library and Berkeley DB implementation that exists on the host system. If the RPM implementation inside the container is not compatible with the RPM database that was used to create the container, once the container has been created RPM and YUM commands inside the container may fail. This issue can be easily demonstrated by bootstrapping an older RHEL compatible image by a newer one (e.g. bootstrap a Centos 5 or 6 container from a Centos 7 host).
+    Warning, there is a major limitation with using YUM to bootstrap a container and that is the RPM database that exists within the container will be created using the RPM library and Berkeley DB implementation that exists on the host system. If the RPM implementation inside the container is not compatible with the RPM database that was used to create the container, once the container has been created RPM and YUM commands inside the container may fail. This issue can be easily demonstrated by bootstrapping an older RHEL compatible image by a newer one (e.g. bootstrap a CentOS 5 or 6 container from a CentOS 7 host).
 
 2. **debootstrap**: The Debian bootstrap module is a tool which is used specifically for bootstrapping distributions which utilize the `.deb` package format and `apt-get` repositories. This module will bootstrap any of the Debian and Ubuntu based distributions. When using the `debootstrap` module, the following keywords must also be defined:
 
-    - **MirrorURL**: This is the location where the packages will be downloaded from. When bootstrapping different Debian based distributions of Linux, this will define which varient will be used (e.g. specifying a different URL can be the difference between Debian or Ubuntu).
+    - **MirrorURL**: This is the location where the packages will be downloaded from. When bootstrapping different Debian based distributions of Linux, this will define which variant will be used (e.g. specifying a different URL can be the difference between Debian or Ubuntu).
     - **OSVersion**: This keyword must be defined as the alpha-character string associated with the version of the distribution you wish to use. For example, `trusty` or `stable`. 
     - **Include**: As with the `yum` module, the `Include` keyword will install additional packages into the core operating system and the best practice is to supply only the bare essentials such that the `%inside` scriptlet has what it needs to properly completely the bootstrap.
 
@@ -330,7 +330,7 @@ The `Bootstrap: ` keyword identifies the Singularity module that will be used fo
 
 4. **docker**: The Docker bootstrap module will create a core operating system image based on an image hosted on a particular Docker Registry server. By default it will use the primary Docker Library, but that can be overridden. When using the `docker` module, several other keywords may also be defined:
 
-    - **From**: This keyword defines the string of the registry name used for this image in the format [name]:[version]. Several examples are: `ubuntu:latest`, `centos:6`, `alpine:latest`, or `debian` (if the version tag is ommitted, `:latest` is automatically used).
+    - **From**: This keyword defines the string of the registry name used for this image in the format [name]:[version]. Several examples are: `ubuntu:latest`, `centos:6`, `alpine:latest`, or `debian` (if the version tag is omitted, `:latest` is automatically used).
     - **IncludeCmd**: This keyword tells Singularity to utilize the Docker defined `Cmd` as the `%runscript` (defined below), if the `Cmd` is defined.
     - **Registry**: If the registry you wish to download the image from is not from the main Docker Library, you can define it here.
     - **Token**: Sometimes the Docker API (depending on version?) requires an authorization token which is generated on the fly. Toggle this with a `yes` or `no` here.
@@ -379,7 +379,7 @@ Similar to the `%setup` section, this section will be executed once during boots
 	exit 0
 ```
 
-The above example runs inside the container, so in this case we will first install the Centos YUM group development tools into the container, and then download Open MPI from the master branch from GitHub. We then build Open MPI and install it within the container. Next we compile one of the MPI test examples `ring_c.c` and install that to `/usr/bin/mpi_ring`. Finally we clean up and exit success.
+The above example runs inside the container, so in this case we will first install the CentOS YUM group development tools into the container, and then download Open MPI from the master branch from GitHub. We then build Open MPI and install it within the container. Next we compile one of the MPI test examples `ring_c.c` and install that to `/usr/bin/mpi_ring`. Finally we clean up and exit success.
 
 *note: As with the `%setup` scriptlet, if any errors are encountered the entire process will fail.*
 
@@ -416,7 +416,7 @@ Bootstrapping is the process where we install an operating system and then confi
 For the purpose of this example, we will use the portions of the bootstrap definition file above, and assemble it into a complete definition file:
 
 ```
-# Bootstrap definition example for Centos-7 with the latest Open MPI from GitHub master
+# Bootstrap definition example for CentOS-7 with the latest Open MPI from GitHub master
 
 BootStrap: yum
 OSVersion: 7
@@ -532,7 +532,7 @@ If a bind path is requested, and the bind point does not exist within the contai
 
 ```bash
 $ singularity shell /tmp/Centos7-ompi.img 
-WARNING: Non existant bind point (directory) in container: '/global'
+WARNING: Non existent bind point (directory) in container: '/global'
 Singularity: Invoking an interactive shell within container...
 
 Singularity.Centos7-ompi.img> 
@@ -556,7 +556,7 @@ If the system administrator has enabled user control of binds (via `user bind co
 
 ```bash
 $ singularity shell -B /tmp:/scratch /tmp/Centos7-ompi.img 
-WARNING: Skipping user bind, non existant bind point (directory) in container: '/scratch'
+WARNING: Skipping user bind, non existent bind point (directory) in container: '/scratch'
 Singularity: Invoking an interactive shell within container...
 
 Singularity.Centos7-ompi.img> 
@@ -764,7 +764,7 @@ Singularity.Centos7-ompi.img> exit
 ## Best Practices for Bootstrapping
 When bootstrapping a container, it is best to consider the following:
 
-1. Install packages, programs, data, and files into operating system locations (e.g. not `/home`, `/tmp`, or any other directories that might get commonly binded on).
+1. Install packages, programs, data, and files into operating system locations (e.g. not `/home`, `/tmp`, or any other directories that might get commonly bound on).
 2. If you require any special environment variables to be defined, add them the `/environment` file inside the container.
 3. Files should never be owned by actual users, they should always be owned by a system account (UID < 500).
 4. Ensure that the container's `/etc/passwd`, `/etc/group`, `/etc/shadow`, and no other sensitive files have anything but the bare essentials within them.
@@ -773,7 +773,7 @@ When bootstrapping a container, it is best to consider the following:
 
 ## Getting Additional Help, Support, Information
 
-As always, goto http://singularity.lbl.gov for the latest information, documentation, support, and news.
+As always, go to http://singularity.lbl.gov for the latest information, documentation, support, and news.
 
 If you think you have found a bug, or want to request a new feature, submit a bug report at: https://github.com/gmkurtzer/singularity/issues/new
 

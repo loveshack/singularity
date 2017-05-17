@@ -151,7 +151,7 @@ int singularity_mount_hostfs(void) {
                 }
                 singularity_priv_drop();
             } else {
-                singularity_message(WARNING, "Non existant 'bind point' directory in container: '%s'\n", mountpoint);
+                singularity_message(WARNING, "Non existent 'bind point' directory in container: '%s'\n", mountpoint);
                 continue;
             }
         }
