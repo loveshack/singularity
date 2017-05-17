@@ -1,4 +1,4 @@
-AC_PREREQ(2.59)
+AC_PREREQ(2.60)
 AC_INIT([singularity],[2.2.1],[gmkurtzer@lbl.gov])
 
 if test -z "$prefix" -o "$prefix" = "NONE" ; then
@@ -34,12 +34,13 @@ AC_CONFIG_SRCDIR([src])
 AC_CONFIG_HEADERS([src/config.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_PROG_INSTALL
-AC_PROG_LIBTOOL
+LT_INIT
 AC_PROG_CC
 AM_INIT_AUTOMAKE
 AM_PROG_CC_C_O
 AC_ENABLE_SHARED
-AC_PROG_LIBTOOL(libtool)
+LT_INIT([libtool])
+AM_PATH_PYTHON
 
 # Setting rpath if necessary
 if test "$libdir" = "\${exec_prefix}/lib"; then
