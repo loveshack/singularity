@@ -48,7 +48,7 @@ int main(int argc __attribute__((unused)), char ** argv) {
     char *loop_dev;
 
     if ( argv[1] == NULL ) {
-        fprintf(stderr, "USAGE: SINGULARITY_IMAGE=[image] %s [command...]\n", argv[0]);
+        fprintf(stderr, "USAGE: SINGULARITY_IMAGE=<image> %s <command>...\n", argv[0]);
         return(1);
     }
 

@@ -45,7 +45,7 @@ int main(int argc, char ** argv) {
     char line[MAX_LINE_LEN];
 
     if ( argc < 2 ) {
-        printf("USAGE: %s [section] [file]\n", argv[0]);
+        printf("USAGE: %s <section> <file>\n", argv[0]);
         exit(0);
     }
 
