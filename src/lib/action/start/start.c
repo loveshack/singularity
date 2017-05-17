@@ -55,7 +55,7 @@ void action_start_init(void) {
 }
 
 
-void action_start_do(int argc, char **argv) {
+void action_start_do(int argc __attribute__((unused)), char **argv __attribute__((unused))) {
     FILE *comm;
     char *line = (char *) xmalloc(256);
     char *sessiondir = singularity_sessiondir_get();

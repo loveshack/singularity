@@ -37,7 +37,7 @@ void action_test_init(void) {
     return;
 }
 
-void action_test_do(int argc, char **argv) {
+void action_test_do(int argc __attribute__((unused)), char **argv __attribute__((unused))) {
     singularity_message(VERBOSE, "Exec'ing /.test\n");
 
     if ( is_exec("/.test") == 0 ) {

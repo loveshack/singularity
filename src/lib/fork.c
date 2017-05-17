@@ -41,13 +41,13 @@ int watchdog_wpipe = -1;
 pid_t child_pid;
 
 
-void handle_signal(int sig, siginfo_t * _, void * __) {
+void handle_signal(int sig, siginfo_t * _ __attribute__((unused)), void * __ __attribute__((unused))) {
     char info = (char)sig;
     singularity_message(DEBUG, "Forwarding signal through generic_signal_wpipe\n");
     while (-1 == write(generic_signal_wpipe, &info, 1) && errno == EINTR) {}
 }
 
-void handle_sigchld(int sig, siginfo_t *siginfo, void * _) {
+void handle_sigchld(int sig __attribute__((unused)), siginfo_t *siginfo, void * _ __attribute__((unused))) {
     singularity_message(DEBUG, "Checking child pids: %i %i\n", siginfo->si_pid, child_pid);
     if ( siginfo->si_pid == child_pid ) {
         singularity_message(DEBUG, "Forwarding signal through sigchld_signal_wpipe\n");

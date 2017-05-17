@@ -37,7 +37,7 @@ void action_shell_init(void) {
     return;
 }
 
-void action_shell_do(int argc, char **argv) {
+void action_shell_do(int argc __attribute__((unused)), char **argv) {
 
     singularity_message(INFO, "Singularity: Invoking an interactive shell within container...\n\n");
 

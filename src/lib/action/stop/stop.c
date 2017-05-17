@@ -41,7 +41,7 @@ void action_stop_init(void) {
     return;
 }
 
-void action_stop_do(int argc, char **argv) {
+void action_stop_do(int argc __attribute__((unused)), char **argv __attribute__((unused))) {
 
 
     singularity_message(ERROR, "We should never get here... Grrrrrr!\n");

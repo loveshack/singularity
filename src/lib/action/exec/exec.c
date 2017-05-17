@@ -37,7 +37,7 @@ void action_exec_init(void) {
     return;
 }
 
-void action_exec_do(int argc, char **argv) {
+void action_exec_do(int argc __attribute__((unused)), char **argv) {
     singularity_message(VERBOSE, "Exec'ing /.exec\n");
 
     if ( is_exec("/.exec") == 0 ) {

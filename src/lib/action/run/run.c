@@ -36,7 +36,7 @@ void action_run_init(void) {
     return;
 }
 
-void action_run_do(int argc, char **argv) {
+void action_run_do(int argc __attribute__((unused)), char **argv) {
     singularity_message(VERBOSE, "Exec'ing /singularity\n");
 
     if ( is_exec("/.run") == 0 ) {

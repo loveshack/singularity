@@ -41,7 +41,7 @@
 #include "util/util.h"
 
 
-int main(int argc, char ** argv) {
+int main(int argc __attribute__((unused)), char ** argv) {
     char *containerimage;
 
     if ( argv[1] == NULL ) {
