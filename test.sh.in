@@ -65,7 +65,7 @@ alias singularity="$SINGULARITY_PATH/singularity"
 
 MESSAGELEVEL=5
 STARTDIR=`pwd`
-TEMPDIR=`mktemp -d /tmp/singularity-test.XXXXXX`
+TEMPDIR=`mktemp --tmpdir -d /tmp/singularity-test.XXXXXX`
 CONTAINER="container.img"
 CONTAINERDIR="container_dir"
 export MESSAGELEVEL
