@@ -120,10 +120,7 @@ void _singularity_message(int level, const char *function, const char *file, int
     }
 
     if ( level <= LOG ) {
-        char syslog_string[540]; // Flawfinder: ignore (512 max message length + 28'ish chars for header)
-        snprintf(syslog_string, sizeof syslog_string, "%s (U=%d,P=%d)> %s", __progname, geteuid(), getpid(), message); // Flawfinder: ignore
-
-        syslog(syslog_level, "%s", syslog_string);
+        syslog(syslog_level, "%s (U=%d,P=%d)> %s", __progname, geteuid(), getpid(), message);
     }
 
     if ( level <= messagelevel ) {
