@@ -152,7 +152,7 @@ char *joinpath(const char * path1, const char * path2) {
 
     size_t ret_pathlen = strlength(tmp_path1, PATH_MAX) + strlength(path2, PATH_MAX) + 2;
     ret = (char *) xmalloc(ret_pathlen);
-    if (snprintf(ret, ret_pathlen, "%s/%s", tmp_path1, path2) >= ret_pathlen) { // Flawfinder: ignore
+    if ((size_t) snprintf(ret, ret_pathlen, "%s/%s", tmp_path1, path2) >= ret_pathlen) { // Flawfinder: ignore
         singularity_message(ERROR, "Overly-long path name.\n");
         ABORT(255);
     }
