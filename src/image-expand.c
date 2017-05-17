@@ -28,11 +28,9 @@
 #include <string.h>
 #include <fcntl.h>  
 
-#include "file.h"
-#include "util.h"
-#include "image.h"
-#include "message.h"
-
+#include "lib/singularity.h"
+#include "util/file.h"
+#include "util/util.h"
 
 
 int main(int argc __attribute__((unused)), char ** argv) {
@@ -45,13 +43,11 @@ int main(int argc __attribute__((unused)), char ** argv) {
 
     if ( argv[2] == NULL ) {
         size = 1024;
-        message(1, "Using default expansion of %ld MiB\n", size);
     } else {
         size = ( strtol(argv[2], (char **)NULL, 10) );
-        message(1, "Expanding image size by %ld MiB\n", size);
     }
 
-    return(image_expand(argv[1], size));
+    return(singularity_image_expand(argv[1], size));
 
     return(0);
 }
