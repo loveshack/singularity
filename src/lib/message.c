@@ -28,6 +28,7 @@
 #include <stdarg.h>
 #include <syslog.h>
 #include <limits.h>
+#include <errno.h>
 
 #include "util/util.h"
 #include "lib/message.h"
@@ -47,8 +48,9 @@ static void init(void) {
     if ( messagelevel_string == NULL ) {
         messagelevel = 1;
     } else {
+        errno = 0;
         l = strtol(messagelevel_string, endptr, 10);
-        if (LONG_MIN == l || LONG_MAX == l || l < 0 || l > 9
+        if (LONG_MIN == l || LONG_MAX == l || errno || l < 0 || l > 9
             || (*messagelevel_string != '\0' && **endptr != '\0')) {
             singularity_message(VERBOSE, "Bad MESSAGELEVEL: %s\n", messagelevel_string);
         }

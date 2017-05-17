@@ -27,6 +27,7 @@
 #include <errno.h> 
 #include <string.h>
 #include <fcntl.h>  
+#include <limits.h>
 
 #include "lib/singularity.h"
 #include "util/util.h"
@@ -37,17 +38,21 @@ int main(int argc __attribute__((unused)), char ** argv) {
     long int size;
 
     if ( argv[1] == NULL ) {
-        fprintf(stderr, "USAGE: %s <singularity container image> [size in MiB]\n", argv[0]);
-        return(1);
+        goto err;
     }
 
     if ( argv[2] == NULL ) {
         size = 1024;
     } else {
+        errno = 0;
         size = ( strtol(argv[2], (char **)NULL, 10) );
+        if (errno || size <= 0 || size == LONG_MAX) {
+            goto err;
+        }
     }
 
     return(singularity_image_create(argv[1], size));
-
-    return(0);
+ err:
+    fprintf(stderr, "USAGE: %s <singularity container image> <size in MiB>\n", argv[0]);
+    return 1;
 }
