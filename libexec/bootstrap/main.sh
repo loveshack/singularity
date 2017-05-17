@@ -34,6 +34,12 @@ else
     exit 1
 fi
 
+bootstrap_cleanup() {
+    rm -rf "$SINGULARITY_TMPDIR"
+}
+
+trap bootstrap_cleanup 0
+
 SINGULARITY_BUILDDEF="${1:-}"
 shift
 SINGULARITY_TMPDIR=`mktemp --tmpdir -d singularity-bootstrap.XXXXXXX`
@@ -64,7 +70,5 @@ if [ -n "${BOOTSTRAP_VERSION:-}" ]; then
 else
     message ERROR "Unrecognized bootstrap format of bootstrap definition\n"
 fi
-
-rm -rf "$SINGULARITY_TMPDIR"
 
 exit $RETVAL
