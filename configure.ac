@@ -285,6 +285,7 @@ AC_CONFIG_FILES([
    Makefile
    singularity.spec
    test.sh
+   etc/singularity.conf
    src/Makefile
    src/lib/Makefile
    src/lib/ns/Makefile
