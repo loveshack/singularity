@@ -62,7 +62,9 @@ int main(int argc, char **argv) {
         singularity_abort(255, "Running in privileged mode, root must own the Singularity configuration file\n");
     }
 
-    singularity_config_open(joinpath(SYSCONFDIR, "/singularity/singularity.conf"));
+    if (singularity_config_open(joinpath(SYSCONFDIR, "/singularity/singularity.conf"))) {
+        exit(1);
+    }
 
     singularity_config_rewind();
     
@@ -84,7 +86,9 @@ int main(int argc, char **argv) {
         singularity_abort(255, "This program must **NOT** be SUID\n");
     }
 
-    singularity_config_open(joinpath(SYSCONFDIR, "/singularity/singularity.conf"));
+    if (singularity_config_open(joinpath(SYSCONFDIR, "/singularity/singularity.conf"))) {
+        exit(1);
+    }
 
     singularity_config_rewind();
 

@@ -56,7 +56,9 @@ int main(int argc __attribute__((unused)), char ** argv) {
     }
 
     singularity_priv_init();
-    singularity_config_open(joinpath(SYSCONFDIR, "/singularity/singularity.conf"));
+    if (singularity_config_open(joinpath(SYSCONFDIR, "/singularity/singularity.conf"))) {
+        exit(1);
+    }
     singularity_sessiondir_init(containerimage);
     singularity_ns_user_unshare();
     singularity_ns_mnt_unshare();
