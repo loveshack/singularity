@@ -32,14 +32,13 @@
 
 #include "util/util.h"
 #include "lib/message.h"
-#include "lib/privilege.h"
 
 static int messagelevel = -1;
 
 extern const char *__progname;
 
 static void init(void) {
-    char *messagelevel_string = envar("MESSAGELEVEL", "", 4);
+    char *messagelevel_string = getenv("MESSAGELEVEL"); // Flawfinder: ignore 
     char **endptr = &messagelevel_string;
     long l;
 
@@ -71,15 +70,6 @@ void _singularity_message(int level, const char *function, const char *file, int
     char message[512]; // Flawfinder: ignore (messages are truncated to 512 chars)
     char *prefix = "";
     va_list args;
-    static unsigned recur = 0;
-    int privileged = geteuid() == 0;
-
-    /* Recursive calls via the privilege-dropping below could cause
-     * trouble with error conditions.  The best we can do is to avoid
-     * recursive messages.  */
-    if (recur > 0) return;
-    recur++;
-
     va_start (args, format);
 
     vsnprintf(message, 512, format, args); // Flawfinder: ignore (format is internally defined)
@@ -145,15 +135,6 @@ void _singularity_message(int level, const char *function, const char *file, int
             header_string[9] = '\0';
         }
 
-        /* Don't print messages when privileged.  They may have
-         * user-controlled contents from arguments or the environment,
-         * with the possibility of injecting input via terminal
-         * control sequences to which the terminal responds with an
-         * escape sequence.  Cleaning escape characters as an
-         * alternative might fall foul of iso-2022 etc. in the absence
-         * of m17n support.  */
-        if (privileged) singularity_priv_drop();
-
         if ( level == INFO && messagelevel == INFO ) {
             printf("%s", message);
         } else if ( level == INFO ) {
@@ -164,10 +145,9 @@ void _singularity_message(int level, const char *function, const char *file, int
             fprintf(stderr, "%s%s", header_string, message);
         }
 
-        if (privileged) singularity_priv_escalate();
         fflush(stdout);
         fflush(stderr);
 
     }
-    recur--;
+
 }
