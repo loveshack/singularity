@@ -133,7 +133,7 @@ mount slave = yes
 # This path specifies the location to use for mounting the container, overlays
 # and other necessary file systems for the container. Note, this location
 # absolutely must be local on this host.
-container dir = @localstatedir@/singularity/mnt
+container dir = @LOCALSTATEDIR@/singularity/mnt
 
 
 # SESSIONDIR PREFIX: [STRING]

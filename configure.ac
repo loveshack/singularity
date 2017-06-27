@@ -278,7 +278,9 @@ AC_SUBST(BUILD_SUID)
 #               [AC_MSG_ERROR([Required mount(2) flags not available])],
 #               [[#include <sys/mount.h>]])
 
-
+# expand out ${prefix}
+eval LOCALSTATEDIR=$localstatedir
+AC_SUBST(LOCALSTATEDIR)
 
 
 AC_CONFIG_FILES([
